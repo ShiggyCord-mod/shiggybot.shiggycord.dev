@@ -16,8 +16,10 @@ jobs:
           submodules: recursive
 
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
 
-      - run: bun install --frozen-lockfile
+      - run: bun install
 
       - name: Build site
         run: bun run build
