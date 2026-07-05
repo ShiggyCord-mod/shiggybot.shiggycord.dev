@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box } from "@mui/material";
 import hljs from "highlight.js/lib/core";
 import csharp from "highlight.js/lib/languages/csharp";
@@ -15,18 +15,15 @@ export default function CodeWindow() {
   const [file, setFile] = useState(() =>
     csFiles.length > 0 ? pick(csFiles) : null,
   );
-  const codeRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (csFiles.length > 0) setFile(pick(csFiles));
   }, []);
 
-  useEffect(() => {
-    if (codeRef.current && file) {
-      const result = hljs.highlight(file.code, { language: "csharp" });
-      codeRef.current.innerHTML = result.value;
-    }
-  }, [file]);
+  const highlighted = useMemo(
+    () => (file ? hljs.highlight(file.code, { language: "csharp" }).value : ""),
+    [file],
+  );
 
   if (!file) return null;
 
@@ -47,7 +44,9 @@ export default function CodeWindow() {
         fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
         fontSize: "0.75rem",
         lineHeight: 1.55,
-        transform: { md: "perspective(1000px) rotateY(-1.5deg) translateZ(6px)" },
+        transform: {
+          md: "perspective(1000px) rotateY(-1.5deg) translateZ(6px)",
+        },
         boxShadow: { md: "0 20px 60px rgba(0,0,0,0.45)" },
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
         "&:hover": {
@@ -55,11 +54,69 @@ export default function CodeWindow() {
           boxShadow: { md: "0 8px 24px rgba(0,0,0,0.3)" },
         },
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
+      {/* Title bar */}
       <Box
         sx={{
-          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          px: 2,
+          py: 1.25,
+          bgcolor: "#12110f",
+          borderBottom: 1,
+          borderColor: "divider",
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              bgcolor: "#e5554d",
+            }}
+          />
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              bgcolor: "#e6bf4b",
+            }}
+          />
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              bgcolor: "#4bb04b",
+            }}
+          />
+        </Box>
+        <Box
+          sx={{
+            flex: 1,
+            textAlign: "center",
+            color: "text.secondary",
+            fontSize: "0.7rem",
+            fontWeight: 500,
+            userSelect: "none",
+          }}
+        >
+          {file.path}
+        </Box>
+        <Box sx={{ width: 44 }} />
+      </Box>
+
+      {/* code area */}
+      <Box
+        sx={{
+          flex: 1,
           overflow: "auto",
           scrollbarWidth: "thin",
           scrollbarColor: "#3a3532 #12110f",
@@ -82,43 +139,6 @@ export default function CodeWindow() {
           },
         }}
       >
-        {/* Title bar — sticky at top */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            px: 2,
-            py: 1.25,
-            bgcolor: "#12110f",
-            borderBottom: 1,
-            borderColor: "divider",
-            position: "sticky",
-            top: 0,
-            zIndex: 1,
-          }}
-        >
-          <Box sx={{ display: "flex", gap: 0.5 }}>
-            <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "#e5554d" }} />
-            <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "#e6bf4b" }} />
-            <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "#4bb04b" }} />
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              textAlign: "center",
-              color: "text.secondary",
-              fontSize: "0.7rem",
-              fontWeight: 500,
-              userSelect: "none",
-            }}
-          >
-            {file.path}
-          </Box>
-          <Box sx={{ width: 44 }} />
-        </Box>
-
-        {/* Code */}
         <Box sx={{ display: "flex" }}>
           <Box
             component="pre"
@@ -139,9 +159,10 @@ export default function CodeWindow() {
             ))}
           </Box>
           <Box component="pre" sx={{ m: 0, px: 2, py: 1.5 }}>
-            <code ref={codeRef} className="language-csharp">
-              {file.code}
-            </code>
+            <code
+              className="language-csharp"
+              dangerouslySetInnerHTML={{ __html: highlighted }}
+            />
           </Box>
         </Box>
       </Box>
