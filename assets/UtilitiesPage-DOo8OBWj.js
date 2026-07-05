@@ -1,0 +1,28 @@
+import{n as e,t}from"./index-B6UokVem.js";var n=e();function r(e){let r={code:`code`,h1:`h1`,h2:`h2`,h3:`h3`,li:`li`,p:`p`,pre:`pre`,span:`span`,strong:`strong`,table:`table`,tbody:`tbody`,td:`td`,th:`th`,thead:`thead`,tr:`tr`,ul:`ul`,...t(),...e.components};return(0,n.jsxs)(n.Fragment,{children:[(0,n.jsx)(r.h1,{children:`Utilities`}),`
+`,(0,n.jsxs)(r.p,{children:[`The `,(0,n.jsx)(r.code,{children:`Utils/`}),` directory contains helper classes used across the codebase.`]}),`
+`,(0,n.jsx)(r.h2,{children:`Known utilities`}),`
+`,(0,n.jsx)(r.h3,{children:`String helpers`}),`
+`,(0,n.jsx)(r.p,{children:`Common string operations used throughout the codebase:`}),`
+`,(0,n.jsxs)(r.ul,{children:[`
+`,(0,n.jsx)(r.li,{children:`Case-insensitive comparison utilities`}),`
+`,(0,n.jsx)(r.li,{children:`Argument parsing helpers (splitting command arguments with quoted string support)`}),`
+`]}),`
+`,(0,n.jsx)(r.h3,{children:`Time parsing`}),`
+`,(0,n.jsxs)(r.p,{children:[`The `,(0,n.jsx)(r.code,{children:`Sban`}),` command accepts durations in formats like `,(0,n.jsx)(r.code,{children:`7d`}),`, `,(0,n.jsx)(r.code,{children:`30m`}),`, `,(0,n.jsx)(r.code,{children:`2h`}),`, `,(0,n.jsx)(r.code,{children:`1w`}),`. A utility method parses these strings into `,(0,n.jsx)(r.code,{children:`TimeSpan`}),` values:`]}),`
+`,(0,n.jsxs)(r.table,{children:[(0,n.jsx)(r.thead,{children:(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.th,{children:`Suffix`}),(0,n.jsx)(r.th,{children:`Unit`}),(0,n.jsx)(r.th,{children:`Example`})]})}),(0,n.jsxs)(r.tbody,{children:[(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`s`})}),(0,n.jsx)(r.td,{children:`Seconds`}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`30s`})})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`m`})}),(0,n.jsx)(r.td,{children:`Minutes`}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`30m`})})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`h`})}),(0,n.jsx)(r.td,{children:`Hours`}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`2h`})})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`d`})}),(0,n.jsx)(r.td,{children:`Days`}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`7d`})})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`w`})}),(0,n.jsx)(r.td,{children:`Weeks`}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`1w`})})]})]})]}),`
+`,(0,n.jsx)(r.p,{children:`The parser is case-insensitive and accepts decimal values.`}),`
+`,(0,n.jsx)(r.h3,{children:`Embed colors`}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.code,{children:`V1EmbedBuilder`}),` provides preset color constants matching the bot's mocha color palette:`]}),`
+`,(0,n.jsxs)(r.table,{children:[(0,n.jsx)(r.thead,{children:(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.th,{children:`Constant`}),(0,n.jsx)(r.th,{children:`Hex`}),(0,n.jsx)(r.th,{children:`Usage`})]})}),(0,n.jsxs)(r.tbody,{children:[(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`ColorPrimary`})}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`#D7B9AE`})}),(0,n.jsx)(r.td,{children:`Default embed color`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`ColorSuccess`})}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`#4CAF50`})}),(0,n.jsx)(r.td,{children:`Success messages`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`ColorError`})}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`#F44336`})}),(0,n.jsx)(r.td,{children:`Error messages`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`ColorWarning`})}),(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`#FF9800`})}),(0,n.jsx)(r.td,{children:`Warning messages`})]})]})]}),`
+`,(0,n.jsx)(r.h3,{children:`HttpClient pattern`}),`
+`,(0,n.jsxs)(r.p,{children:[`Several classes create `,(0,n.jsx)(r.code,{children:`static readonly HttpClient`}),` instances:`]}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-csharp`,children:[(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`private`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`static`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`readonly`}),` HttpClient _http = `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`new`}),`();
+`]})}),`
+`,(0,n.jsxs)(r.p,{children:[`This is intentional — `,(0,n.jsx)(r.code,{children:`HttpClient`}),` is designed to be shared via static instances to avoid socket exhaustion from repeated creation and disposal. However, most instances lack an explicit `,(0,n.jsx)(r.code,{children:`Timeout`}),` (defaulting to 100 seconds).`]}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.strong,{children:`Best practice:`}),` Always set an explicit timeout:`]}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-csharp`,children:[(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`private`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`static`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`readonly`}),` HttpClient _http = `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`new`}),`()
+{
+    Timeout = TimeSpan.FromSeconds(`,(0,n.jsx)(r.span,{className:`hljs-number`,children:`15`}),`)
+};
+`]})}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.code,{children:`MonitorService`}),` is the only class that currently follows this pattern.`]})]})}function i(e={}){let{wrapper:i}={...t(),...e.components};return i?(0,n.jsx)(i,{...e,children:(0,n.jsx)(r,{...e})}):r(e)}function a(){return(0,n.jsx)(i,{})}export{a as default};

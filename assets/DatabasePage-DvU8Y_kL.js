@@ -1,0 +1,47 @@
+import{n as e,t}from"./index-B6UokVem.js";var n=e();function r(e){let r={code:`code`,h1:`h1`,h2:`h2`,h3:`h3`,p:`p`,pre:`pre`,span:`span`,strong:`strong`,table:`table`,tbody:`tbody`,td:`td`,th:`th`,thead:`thead`,tr:`tr`,...t(),...e.components};return(0,n.jsxs)(n.Fragment,{children:[(0,n.jsx)(r.h1,{children:`Database`}),`
+`,(0,n.jsxs)(r.p,{children:[`ShiggyBot uses SQLite via `,(0,n.jsx)(r.code,{children:`Microsoft.Data.Sqlite`}),` for persistent data storage.`]}),`
+`,(0,n.jsx)(r.h2,{children:`Connection model`}),`
+`,(0,n.jsxs)(r.p,{children:[`A single `,(0,n.jsx)(r.code,{children:`SqliteConnection`}),` is opened at startup and kept open for the lifetime of the process:`]}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-csharp`,children:[`_connection = `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`new`}),` SqliteConnection(`,(0,n.jsxs)(r.span,{className:`hljs-string`,children:[`$"Data Source=`,(0,n.jsx)(r.span,{className:`hljs-subst`,children:`{dbPath}`}),`"`]}),`);
+`,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`await`}),` _connection.OpenAsync();
+`]})}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.strong,{children:`Thread safety:`}),` The connection is not thread-safe. The bot uses single-threaded access by design — all database operations happen on Discord.NET's gateway thread or timer callbacks, never concurrently.`]}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.strong,{children:`Database path:`}),` `,(0,n.jsx)(r.code,{children:`Path.Combine(AppContext.BaseDirectory, "shiggybot.db")`})]}),`
+`,(0,n.jsx)(r.h2,{children:`Schema`}),`
+`,(0,n.jsxs)(r.p,{children:[`Tables are created in `,(0,n.jsx)(r.code,{children:`DatabaseService.InitializeAsync()`}),` via `,(0,n.jsx)(r.code,{children:`CREATE TABLE IF NOT EXISTS`}),`:`]}),`
+`,(0,n.jsx)(r.h3,{children:`TimedBans`}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-sql`,children:[(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`CREATE TABLE`}),` IF `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`EXISTS`}),` TimedBans (
+    Id          `,(0,n.jsx)(r.span,{className:`hljs-type`,children:`INTEGER`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`PRIMARY KEY`}),` AUTOINCREMENT,
+    GuildId     TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),`,
+    UserId      TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),`,
+    BanTime     TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),`,
+    UnbanTime   TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),`,
+    Reason      TEXT,
+    ModeratorId TEXT
+);
+`]})}),`
+`,(0,n.jsxs)(r.table,{children:[(0,n.jsx)(r.thead,{children:(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.th,{children:`Column`}),(0,n.jsx)(r.th,{children:`Type`}),(0,n.jsx)(r.th,{children:`Content`})]})}),(0,n.jsxs)(r.tbody,{children:[(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`Id`})}),(0,n.jsx)(r.td,{children:`INTEGER`}),(0,n.jsx)(r.td,{children:`Auto-incrementing primary key`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`GuildId`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Discord guild snowflake (stringified)`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`UserId`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Discord user snowflake (stringified)`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`BanTime`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`ISO 8601 timestamp when the ban was issued`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`UnbanTime`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`ISO 8601 timestamp when the ban should be lifted`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`Reason`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Optional reason for the ban`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`ModeratorId`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Discord snowflake of the moderator who issued the ban`})]})]})]}),`
+`,(0,n.jsx)(r.h3,{children:`DisabledCommands`}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-sql`,children:[(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`CREATE TABLE`}),` IF `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`EXISTS`}),` DisabledCommands (
+    GuildId     TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),`,
+    CommandName TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),`,
+    `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`PRIMARY KEY`}),` (GuildId, CommandName)
+);
+`]})}),`
+`,(0,n.jsxs)(r.table,{children:[(0,n.jsx)(r.thead,{children:(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.th,{children:`Column`}),(0,n.jsx)(r.th,{children:`Type`}),(0,n.jsx)(r.th,{children:`Content`})]})}),(0,n.jsxs)(r.tbody,{children:[(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`GuildId`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Discord guild snowflake`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`CommandName`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Upper-invariant command name`})]})]})]}),`
+`,(0,n.jsxs)(r.p,{children:[`Used by `,(0,n.jsx)(r.code,{children:`Sdisable`}),` / `,(0,n.jsx)(r.code,{children:`Senable`}),`. Checked by `,(0,n.jsx)(r.code,{children:`CommandHandler`}),` before each command execution.`]}),`
+`,(0,n.jsx)(r.h3,{children:`GuildConfig`}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-sql`,children:[(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`CREATE TABLE`}),` IF `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`EXISTS`}),` GuildConfig (
+    GuildId       TEXT `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`NOT NULL`}),` `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`PRIMARY KEY`}),`,
+    WelcomeRoleId TEXT
+);
+`]})}),`
+`,(0,n.jsxs)(r.table,{children:[(0,n.jsx)(r.thead,{children:(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.th,{children:`Column`}),(0,n.jsx)(r.th,{children:`Type`}),(0,n.jsx)(r.th,{children:`Content`})]})}),(0,n.jsxs)(r.tbody,{children:[(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`GuildId`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Discord guild snowflake`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:(0,n.jsx)(r.code,{children:`WelcomeRoleId`})}),(0,n.jsx)(r.td,{children:`TEXT`}),(0,n.jsx)(r.td,{children:`Role ID assigned on member join`})]})]})]}),`
+`,(0,n.jsxs)(r.p,{children:[`Set via `,(0,n.jsx)(r.code,{children:`Ssetwelcome`}),` or the `,(0,n.jsx)(r.code,{children:`WELCOME_ROLE_ID`}),` config key.`]}),`
+`,(0,n.jsx)(r.h2,{children:`Database conventions`}),`
+`,(0,n.jsxs)(r.table,{children:[(0,n.jsx)(r.thead,{children:(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.th,{children:`Data type`}),(0,n.jsx)(r.th,{children:`Storage`}),(0,n.jsx)(r.th,{children:`Reason`})]})}),(0,n.jsxs)(r.tbody,{children:[(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:`Guild/user IDs`}),(0,n.jsxs)(r.td,{children:[(0,n.jsx)(r.code,{children:`TEXT`}),` (stringified)`]}),(0,n.jsx)(r.td,{children:`SQLite INTEGER is limited to 64-bit signed. Discord snowflakes can exceed this in some operations. String avoids overflow.`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:`Dates/timestamps`}),(0,n.jsxs)(r.td,{children:[(0,n.jsx)(r.code,{children:`TEXT`}),` (ISO 8601)`]}),(0,n.jsx)(r.td,{children:`Human-readable, sortable, timezone-aware.`})]}),(0,n.jsxs)(r.tr,{children:[(0,n.jsx)(r.td,{children:`Booleans`}),(0,n.jsx)(r.td,{children:`Not used`}),(0,n.jsx)(r.td,{children:`Not needed in the current schema.`})]})]})]}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.strong,{children:`Parameterized queries:`}),` All queries use `,(0,n.jsx)(r.code,{children:`@parameters`}),` to prevent SQL injection:`]}),`
+`,(0,n.jsx)(r.pre,{children:(0,n.jsxs)(r.code,{className:`hljs language-csharp`,children:[`cmd.Parameters.AddWithValue(`,(0,n.jsx)(r.span,{className:`hljs-string`,children:`"@guildId"`}),`, guildId.ToString(CultureInfo.InvariantCulture));
+cmd.Parameters.AddWithValue(`,(0,n.jsx)(r.span,{className:`hljs-string`,children:`"@value"`}),`, `,(0,n.jsx)(r.span,{className:`hljs-keyword`,children:`value`}),`);
+`]})}),`
+`,(0,n.jsxs)(r.p,{children:[(0,n.jsx)(r.strong,{children:`CultureInfo.InvariantCulture:`}),` Always use `,(0,n.jsx)(r.code,{children:`CultureInfo.InvariantCulture`}),` for `,(0,n.jsx)(r.code,{children:`ToString()`}),` conversions of database values to ensure consistent formatting across different system locales.`]})]})}function i(e={}){let{wrapper:i}={...t(),...e.components};return i?(0,n.jsx)(i,{...e,children:(0,n.jsx)(r,{...e})}):r(e)}function a(){return(0,n.jsx)(i,{})}export{a as default};
