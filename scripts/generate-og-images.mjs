@@ -43,6 +43,7 @@ const routeMeta = {
   "/extending/new-data": { title: "New Data", description: "Adding new data services and database entities to ShiggyBot." },
   "/extending/style-guide": { title: "Style Guide", description: "Coding conventions and style guidelines for contributing to ShiggyBot." },
   "/extending/gotchas": { title: "Gotchas", description: "Common pitfalls and gotchas when extending ShiggyBot." },
+  "/404": { title: "Page Not Found", description: "The page you're looking for doesn't exist or has been moved." },
 };
 
 function slug(route) {

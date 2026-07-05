@@ -5,6 +5,7 @@ import { lightTheme, darkTheme } from "./theme";
 import MetaTags from "./components/MetaTags";
 import HomePage from "./pages/HomePage";
 import CommandsPage from "./pages/CommandsPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import DocLayout from "./layouts/DocLayout";
 
 // Setup pages
@@ -127,6 +128,16 @@ export default function App() {
             <Route path="/extending/style-guide" element={<StyleGuidePage />} />
             <Route path="/extending/gotchas" element={<GotchasPage />} />
           </Route>
+
+          <Route
+            path="*"
+            element={
+              <NotFoundPage
+                onToggleTheme={() => setIsDark((d) => !d)}
+                isDark={isDark}
+              />
+            }
+          />
         </Routes>
       </Suspense>
     </ThemeProvider>

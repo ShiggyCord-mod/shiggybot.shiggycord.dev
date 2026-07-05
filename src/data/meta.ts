@@ -132,15 +132,17 @@ const routeMeta: Record<string, PageMeta> = {
     title: `${t.nav.extendingGotchas} — ${siteName}`,
     description: `Common pitfalls and gotchas when extending ${siteName}.`,
   },
+  "/404": {
+    title: `Page Not Found — ${siteName}`,
+    description: `The page you're looking for doesn't exist or has been moved.`,
+  },
 };
 
 export function getPageMeta(pathname: string): PageMeta {
-  return (
-    routeMeta[pathname] ?? {
-      title: siteName,
-      description: defaultDescription,
-    }
-  );
+  return routeMeta[pathname] ?? routeMeta["/404"] ?? {
+    title: siteName,
+    description: defaultDescription,
+  };
 }
 
 export { siteUrl, siteName, defaultDescription, ogImage };

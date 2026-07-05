@@ -45,6 +45,7 @@ const routeMeta = {
   "/extending/new-data": { title: "New Data — ShiggyBot", description: "Adding new data services and database entities to ShiggyBot." },
   "/extending/style-guide": { title: "Style Guide — ShiggyBot", description: "Coding conventions and style guidelines for contributing to ShiggyBot." },
   "/extending/gotchas": { title: "Gotchas — ShiggyBot", description: "Common pitfalls and gotchas when extending ShiggyBot." },
+  "/404": { title: "Page Not Found — ShiggyBot", description: "The page you're looking for doesn't exist or has been moved." },
 };
 
 function injectMeta(baseHtml, route, meta) {
@@ -85,6 +86,12 @@ for (const [route, meta] of Object.entries(routeMeta)) {
   const outHtml = injectMeta(html, route, meta);
   writeFileSync(outPath, outHtml);
   console.log(`  ${outPath}`);
+
+  // GitHub Pages serves 404.html at root for unmatched routes
+  if (route === "/404") {
+    writeFileSync(join(dist, "404.html"), outHtml);
+    console.log(`  ${join(dist, "404.html")}`);
+  }
 }
 
 console.log(`\nGenerated ${Object.keys(routeMeta).length} route HTML files with OG tags.`);
