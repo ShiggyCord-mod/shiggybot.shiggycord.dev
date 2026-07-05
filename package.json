@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/generate-cs-index.mjs",
+    "predev": "node scripts/generate-cs-index.mjs && node scripts/generate-og-images.mjs",
     "dev": "bun run predev && vite --host",
-    "prebuild": "node scripts/generate-cs-index.mjs",
-    "build": "bun run prebuild && tsc -b && vite build",
+    "prebuild": "node scripts/generate-cs-index.mjs && node scripts/generate-og-images.mjs",
+    "build": "bun run prebuild && tsc -b && vite build && node scripts/generate-og-pages.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -19,14 +19,17 @@
     "highlight.js": "^11.11.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.1",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",
     "@types/node": "^26.1.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@types/sharp": "^0.32.0",
     "@vitejs/plugin-react": "^6.0.3",
     "rehype-highlight": "^7.0.2",
     "typescript": "~6.0.3",

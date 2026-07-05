@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider, CssBaseline, CircularProgress, Box } from "@mui/material";
 import { lightTheme, darkTheme } from "./theme";
+import MetaTags from "./components/MetaTags";
 import HomePage from "./pages/HomePage";
 import CommandsPage from "./pages/CommandsPage";
 import DocLayout from "./layouts/DocLayout";
@@ -60,6 +61,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <MetaTags />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
