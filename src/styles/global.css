@@ -144,6 +144,19 @@ body {
     border-radius: 12px;
 }
 
+/* Details / summary */
+.doc-content details {
+    margin: 0.5rem 0;
+}
+
+.doc-content details summary {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    font-weight: 500;
+    padding: 0.25rem 0;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

@@ -20,7 +20,8 @@ dotnet --version
 
 ### Linux install
 
-On Ubuntu/Debian:
+<details>
+<summary>Ubuntu / Debian</summary>
 
 ```bash
 # Register Microsoft repository
@@ -31,6 +32,77 @@ sudo apt update
 # Install SDK
 sudo apt install -y dotnet-sdk-10.0
 ```
+
+</details>
+
+<details>
+<summary>Fedora</summary>
+
+```bash
+# Register Microsoft repository
+sudo rpm -Uvh https://packages.microsoft.com/config/fedora/41/packages-microsoft-prod.rpm
+
+# Install SDK
+sudo dnf install -y dotnet-sdk-10.0
+```
+
+</details>
+
+<details>
+<summary>Arch Linux</summary>
+
+Install from the official repos:
+
+```bash
+sudo pacman -S dotnet-sdk
+```
+
+The `dotnet-sdk` package in the Arch repos typically tracks the latest stable release.
+
+</details>
+
+<details>
+<summary>NixOS</summary>
+
+Add `dotnet-sdk` to your `environment.systemPackages`:
+
+```nix
+{ pkgs, ... }: {
+  environment.systemPackages = with pkgs; [ dotnet-sdk ];
+}
+```
+
+Or enter a temporary shell:
+
+```bash
+nix-shell -p dotnet-sdk
+```
+
+</details>
+
+<details>
+<summary>Gentoo</summary>
+
+```bash
+sudo emerge -av dev-dotnet/dotnet-sdk-bin
+```
+
+The `dotnet-sdk-bin` package provides a precompiled binary SDK. For a from-source build, use `dev-dotnet/dotnet-sdk` (requires the `dotnet` overlay).
+
+</details>
+
+<details>
+<summary>openSUSE</summary>
+
+```bash
+# Register Microsoft repository
+sudo zypper install -y https://packages.microsoft.com/config/opensuse/15/packages-microsoft-prod.rpm
+
+# Install SDK
+sudo zypper install -y dotnet-sdk-10.0
+```
+
+</details>
 
 ### macOS install
 
