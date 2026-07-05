@@ -1,0 +1,80 @@
+# CI/CD
+
+ShiggyBot uses GitHub Actions for continuous integration and deployment. Workflows are defined in `.github/workflows/`.
+
+## CI workflow (`ci.yml`)
+
+Triggered on push or pull request to the `dev` branch.
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build -c Release
+```
+
+| Step | What it does |
+|------|-------------|
+| `checkout` | Clones the repository |
+| `setup-dotnet` | Installs .NET 10 SDK |
+| `dotnet build -c Release` | Builds in Release mode. Fails on any warning due to `TreatWarningsAsErrors`. |
+
+### CI triggers
+
+| Event | Branch |
+|-------|--------|
+| Push | `dev` |
+| Pull request | `dev` |
+
+## Release workflow (`release.yml`)
+
+Triggered on push to the `main` branch.
+
+```yaml
+jobs:
+  publish:
+    strategy:
+      matrix:
+        rid: [win-x64, linux-x64, osx-x64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ShiggyBot-${{ matrix.rid }}
+          path: bin/Release/net10.0/${{ matrix.rid }}/publish/
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      # ... creates a GitHub Release with the artifacts
+```
+
+### Release triggers
+
+| Event | Branch |
+|-------|--------|
+| Push | `main` |
+
+### Release output
+
+Three platform-specific archives are uploaded as release artifacts:
+
+- `ShiggyBot-win-x64.zip` — Windows x86-64 single-file binary
+- `ShiggyBot-linux-x64.tar.gz` — Linux x86-64 single-file binary
+- `ShiggyBot-osx-x64.tar.gz` — macOS Intel single-file binary
+
+A GitHub Release is created automatically with the version from `VERSION` file.
+
+## Checking CI status
+
+You can view workflow runs in the repository's **Actions** tab. A green checkmark means the build passed. Red means it failed — click the run for details.

@@ -1,0 +1,91 @@
+# Configuration Sources
+
+The `BotConfig.LoadFromConfiguration()` method reads configuration from three sources in a specific order. Later sources override earlier ones.
+
+## Loading order
+
+```
+1. appsettings.json          (gitignored, project root)
+2. Environment variables     (process environment)
+3. config.txt                (INI-style, working directory)
+```
+
+After reading all three sources, `DISCORD_TOKEN` and `PREFIX` have an additional fallback: `Environment.GetEnvironmentVariable()` is called again directly, providing a last-resort for Docker and CI environments.
+
+## appsettings.json
+
+A JSON file in the project root directory. It is gitignored so real tokens are not committed.
+
+```json
+{
+  "DISCORD_TOKEN": "your_token_here",
+  "PREFIX": "S",
+  "PRESENCE_STATUS": "online"
+}
+```
+
+The file uses `System.Text.Json` for deserialization. All keys are case-sensitive.
+
+**Path:** `appsettings.json` in the working directory.
+
+## Environment variables
+
+Each config key can be set as an operating system environment variable:
+
+```bash
+export DISCORD_TOKEN=your_token_here
+export PREFIX=S
+export PRESENCE_STATUS=dnd
+export GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+```
+
+Environment variables are read via `Environment.GetEnvironmentVariable()`. This is the recommended method for Docker, CI/CD, and production deployments.
+
+## config.txt
+
+An INI-style file placed next to the executable. Each non-empty, non-comment line is treated as a key-value pair:
+
+```
+# Discord bot token
+DISCORD_TOKEN=your_token_here
+
+# Command prefix
+PREFIX=S
+```
+
+### Parsing rules
+
+| Rule | Detail |
+|------|--------|
+| Comments | Lines starting with `#` are ignored (leading whitespace is NOT trimmed) |
+| Key-value separator | `Split('=', 2)` — split only on the first `=` |
+| Whitespace | NOT trimmed from keys or values |
+| Blank lines | Skipped |
+
+### Gotcha: values containing =
+
+The parser uses `string.Split('=', 2)`, which splits only on the **first** `=` character. Any `=` in the value portion is preserved:
+
+```
+TOKEN=abc=def   → parsed as "abc=def" ✓
+```
+
+Wait — this contradicts the AGENTS.md which says values are *truncated* at the first `=`. Let me verify: `"abc=def".Split('=', 2)` produces `["abc", "def"]`. So `=` in the value is actually fine. The truncation issue is for something else.
+
+Actually, re-reading: `Split('=', 2)` with `StringSplitOptions.None` on `"abc=def=ghi"` produces `["abc", "def=ghi"]`. So the value part preserves everything after the first `=`. Values containing `=` are NOT truncated — this is a documented misconception. The `Split(count: 2)` overload keeps all subsequent `=` in the value.
+
+**Correction from AGENTS.md:** The AGENTS.md states "Values containing `=` are truncated" — this appears to be incorrect. The parser preserves everything after the first `=`. Use `appsettings.json` for values with `=` if you encounter issues.
+
+### Location
+
+`config.txt` is loaded from the working directory (not the executable directory). For published single-file deployments, place it next to the `ShiggyBot` binary.
+
+## How BotConfig.LoadFromConfiguration works
+
+The method follows this flow:
+
+1. Deserialize `appsettings.json` using `System.Text.Json`.
+2. Read environment variables for each known key.
+3. Parse `config.txt` line by line.
+4. Check the deserialized settings object. If not found, check environment variables. If not found, check `config.txt`. If still not found, apply default or fallback.
+5. For `DISCORD_TOKEN` and `PREFIX` specifically, call `Environment.GetEnvironmentVariable()` as a final fallback.

@@ -1,0 +1,81 @@
+# Building
+
+ShiggyBot uses the standard .NET build system with strict analyzer rules. This page covers cloning, building, and handling common build failures.
+
+## Clone the repository
+
+```bash
+git clone https://github.com/kmmiio99o/ShiggyBot.git
+cd ShiggyBot
+```
+
+The repository uses two primary branches:
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Stable releases. CI publishes platform-specific bundles on push. |
+| `dev` | Active development. CI builds on push/PR. |
+
+## Build
+
+```bash
+dotnet build
+```
+
+This compiles the project and runs all analyzers. The build compiles to `bin/Debug/net10.0/`.
+
+## Build constraints
+
+The project file (`ShiggyBot.csproj`) enforces strict quality rules:
+
+| Setting | Effect |
+|---------|--------|
+| `TreatWarningsAsErrors=true` | Any compiler or analyzer warning becomes a build error. |
+| `AnalysisMode=All` | All built-in Roslyn analyzers are enabled at warning level. |
+| `GenerateDocumentationFile=true` | XML documentation is generated. `CS1591` (missing doc on public/internal API) is a warning. |
+
+The only suppressed warning is `IDE0058` (unused expression result), which is set to `silent` because Discord.NET's fluent builder APIs return disposable objects that are intentionally discarded in builder patterns.
+
+## Build errors and fixes
+
+### .NET 10 SDK not found
+
+```text
+error : The current .NET SDK does not support targeting .NET 10.0.
+```
+
+Run `dotnet --version` to check the installed SDK version. Download .NET 10 SDK from the [official site](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
+
+### Project file not found
+
+```text
+error MSB4132: The specified runtime 'linux-x64' was not recognized.
+```
+
+Ensure you are in the project root directory (contains `ShiggyBot.csproj`). The `RuntimeIdentifier` is only relevant for `dotnet publish`, not `dotnet build`.
+
+### Locked bin/obj directories
+
+```text
+error MSB3021: Unable to copy file "..." to "bin/...". The process cannot access the file because it is being used by another process.
+```
+
+Run `dotnet clean` to remove intermediate files, or close any processes that may have files open (e.g., the running bot, file explorers).
+
+### Analyzer warnings as errors
+
+If your code produces a warning, the build will fail with an error message like:
+
+```text
+error CAxxxx: ...
+```
+
+Fix the warning before committing. The CI pipeline enforces the same rules.
+
+## Building in Release mode
+
+```bash
+dotnet build -c Release
+```
+
+Release mode applies optimizations (inlining, dead-code elimination). The output goes to `bin/Release/net10.0/`.

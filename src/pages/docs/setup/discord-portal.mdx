@@ -1,0 +1,66 @@
+# Creating a Discord bot application
+
+This page covers every step in the Discord Developer Portal — from creating the application to inviting the bot to your server.
+
+## Step 1: Create a new application
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Click **New Application** in the top-right corner.
+3. Enter a name for your bot (this is not the bot's display name on servers — that is set separately).
+4. Accept the Discord Developer Terms of Service and the Developer Policy.
+5. Click **Create**.
+
+## Step 2: Configure the bot
+
+1. Navigate to the **Bot** tab in the left sidebar.
+2. Click **Add Bot** and confirm.
+3. Customize your bot's display name and avatar (optional).
+4. Under **Token**, click **Reset Token** (or **Copy** if it already exists). Store this token somewhere safe — you will need it for `config.txt` or `appsettings.json`. The token is shown only once.
+
+### Privileged Gateway Intents
+
+Two intents must be enabled for the bot to function:
+
+| Intent | Required for | Must enable? |
+|--------|-------------|-------------|
+| **Message Content Intent** | Reading message text for prefix-based commands | **Yes** — bot will be online but will not respond without this |
+| **Server Members Intent** | Autorole on member join events | Optional — needed only if using `WELCOME_ROLE_ID` |
+
+Both are toggles under the **Privileged Gateway Intents** section. You may need to verify your bot (if it is in 100+ servers) before enabling them.
+
+## Step 3: Invite the bot to a server
+
+1. Go to the **OAuth2 > URL Generator** tab.
+2. Under **Scopes**, check `bot` and `applications.commands`.
+3. Under **Bot Permissions**, select:
+
+| Permission | Reason |
+|------------|--------|
+| Read Messages / View Channels | Basic operation |
+| Send Messages | Replying to commands |
+| Manage Messages | `Spurge` command |
+| Embed Links | Commit previews, code previews, help embeds |
+| Attach Files | `Smpreg` image compositing |
+| Read Message History | Command context |
+| Kick Members | `Skick` command |
+| Ban Members | `Sban` (timed bans + unban) |
+| Moderate Members | `Stimeout` command |
+| Manage Roles | `Saddrole` / `Sremoverole` |
+| Manage Channels | `Snuke` (clone + delete) |
+
+4. Copy the generated URL at the bottom of the page.
+5. Open the URL in your browser.
+6. Select the server you want to add the bot to (you need the `Manage Server` permission in that server).
+7. Click **Authorize** and complete the CAPTCHA.
+
+## Step 4: Verify the bot appears
+
+Once invited, the bot will appear in the server's member list with an offline status. It will come online once configured and running.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| "Bot requires code grant" | Disable **Requires OAuth2 Code Grant** in the Bot tab |
+| Bot not appearing in invite flow | Ensure `bot` scope is checked in the URL Generator |
+| Wrong permissions granted | Regenerate the invite URL with correct permissions |

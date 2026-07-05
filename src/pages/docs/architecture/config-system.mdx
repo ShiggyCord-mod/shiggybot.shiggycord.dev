@@ -1,0 +1,73 @@
+# Config System
+
+The `BotConfig` class is the configuration model. It is populated by the static `LoadFromConfiguration()` method.
+
+## BotConfig class
+
+```csharp
+internal sealed class BotConfig
+{
+    public string? DiscordToken { get; init; }
+    public string Prefix { get; init; } = "S";
+    public string? WelcomeRoleId { get; init; }
+    public string PresenceStatus { get; init; } = "online";
+    public int PresenceInterval { get; init; } = 300;
+    public string? LogWebhookUrl { get; init; }
+    public string? HfToken { get; init; }
+    public string? GitHubToken { get; init; }
+    public string GitHubRepo { get; init; } = "kmmiio99o/ShiggyCord";
+    public string? GitHubWebhookChannelId { get; init; }
+    public string? DevGuildId { get; init; }
+}
+```
+
+All properties use `init`-only setters for immutability after construction.
+
+## LoadFromConfiguration flow
+
+```csharp
+public static BotConfig LoadFromConfiguration()
+```
+
+The method:
+
+1. Reads `appsettings.json` from the working directory using `System.Text.Json`.
+2. Reads each known key from `Environment.GetEnvironmentVariable()`.
+3. Reads `config.txt` from the working directory.
+4. For each config property, checks sources in priority order (later overrides earlier).
+5. For `DISCORD_TOKEN` and `PREFIX`, calls `Environment.GetEnvironmentVariable()` as final fallback.
+
+### Source priority (highest to lowest)
+
+```
+config.txt  →  Environment variables  →  appsettings.json  →  Default values
+```
+
+Wait — the actual implementation checks in this order for each key:
+
+1. Check `config.txt` first (highest priority)
+2. Check environment variable
+3. Check `appsettings.json`
+4. Apply default
+
+But AGENTS.md says: "Loading order (later overrides earlier): 1. appsettings.json, 2. Environment variables, 3. config.txt" — meaning config.txt has highest priority. The actual implementation follows this, with config.txt checked last (thus overriding everything).
+
+## Key defaults
+
+| Key | Default | Nullable |
+|-----|---------|----------|
+| `DISCORD_TOKEN` | `null` | Yes |
+| `PREFIX` | `"S"` | No |
+| `WELCOME_ROLE_ID` | `null` | Yes |
+| `PRESENCE_STATUS` | `"online"` | No |
+| `PRESENCE_INTERVAL` | `300` | No |
+| `LOG_WEBHOOK_URL` | `null` | Yes |
+| `HF_TOKEN` | `null` | Yes |
+| `GITHUB_TOKEN` | `null` | Yes |
+| `GITHUB_REPO` | `"kmmiio99o/ShiggyCord"` | No |
+| `GITHUB_WEBHOOK_CHANNEL_ID` | `null` | Yes |
+| `DEV_GUILD_ID` | `null` | Yes |
+
+## Mutability
+
+`BotConfig` is immutable after construction (all properties are `{ get; init; }`). To change configuration, edit the config file and restart the bot. There is no runtime config reload.

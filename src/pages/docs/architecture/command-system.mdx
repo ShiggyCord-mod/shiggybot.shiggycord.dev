@@ -1,0 +1,130 @@
+# Command System
+
+The command system handles prefix detection, permission checking, guild gating, and command execution.
+
+## CommandHandler
+
+`CommandHandler` is the central dispatch class. It is initialized with references to the Discord client, the V1 and V2 component clients, the database service, and the bot configuration.
+
+### Dispatch flow
+
+```
+User sends "Sping"
+1. Prefix check: message starts with "S"? Yes → continue
+2. Extract command name: "ping"
+3. Lookup: find ICommand with Name or Alias matching "PING" (upper-invariant)
+4. Permission check: user has required guild permission?
+5. Guild gating: is "ping" disabled for this guild?
+6. Parse arguments: split remainder into string[] args
+7. Execute: call ICommand.ExecuteAsync()
+```
+
+### Prefix check
+
+The check is simple: `message.Content.StartsWith(_config.Prefix, StringComparison.CurrentCultureIgnoreCase)`. If false, the message is ignored entirely.
+
+### Case-insensitive matching
+
+Commands are stored in a `ConcurrentDictionary<string, ICommand>` with upper-invariant keys:
+
+```csharp
+_dict.TryGetValue(commandName.ToUpperInvariant(), out var command);
+```
+
+This means `Sping`, `SPING`, `sping`, and `SpInG` all match the same command.
+
+### Permission check
+
+`ICommand` has an optional `RequiredPermission` property:
+
+```csharp
+GuildPermission? RequiredPermission => GuildPermission.Administrator;
+```
+
+The handler checks `((SocketGuildUser)message.Author).GuildPermissions.Has(permission)`. If the user lacks the permission, execution is silently skipped (no error message).
+
+### Guild gating
+
+Before execution, the handler checks `DatabaseService.IsCommandDisabledAsync(guildId, commandName)`. If the command is disabled for that guild, execution is skipped.
+
+Commands can be toggled on/off per guild using `Sdisable` and `Senable`. See [Database](/architecture/database) for the schema.
+
+## ICommand interface
+
+```csharp
+public interface ICommand
+{
+    string Name { get; }
+    string Description { get; }
+    string Category { get; }
+    IReadOnlyList<string> Aliases { get; }
+    GuildPermission? RequiredPermission { get; }
+
+    Task ExecuteAsync(SocketUserMessage message, string[] args, DiscordSocketClient client);
+}
+```
+
+| Member | Purpose |
+|--------|---------|
+| `Name` | Primary command name used for dispatch lookup |
+| `Description` | Shown in help text |
+| `Category` | Grouping category for help menu |
+| `Aliases` | Alternative names (e.g., `["g", "search"]` for `google`) |
+| `RequiredPermission` | Optional guild permission requirement |
+| `ExecuteAsync` | The command logic |
+
+## Command registration
+
+Commands are registered in `CommandHandler.RegisterCommands()`:
+
+```csharp
+public void RegisterCommands()
+{
+    if (_v1Client is not null)
+    {
+        Register(new PingCommand());
+        Register(new NoteCommand());
+        Register(new KickCommand());
+        // ... V1-only commands
+    }
+
+    if (_v2Client is not null)
+    {
+        Register(new HelpCommand());
+        Register(new PluginCommand());
+        Register(new TimeoutCommand());
+        Register(new BanCommand());
+        // ... V2-only commands
+    }
+}
+```
+
+Commands are conditionally registered based on which component client is available. If the Discord token is null or empty, both clients are null and **no commands are registered** — the bot connects but does nothing.
+
+### V1 commands
+
+| Command | Category |
+|---------|----------|
+| `Sping` | Utility |
+| `Snote` | Utility |
+| `Skick` | Moderation |
+| `Spurge` | Moderation |
+| `Snuke` | Moderation |
+| `Saddrole` | Moderation |
+| `Sremoverole` | Moderation |
+| `Sdisable` | Moderation |
+| `Senable` | Moderation |
+| `Ssetwelcome` | Core |
+| `Sgoogle` | Search |
+| `Smpreg` | Fun |
+| `Sv1` | Developer |
+
+### V2 commands
+
+| Command | Category |
+|---------|----------|
+| `Shelp` | Utility |
+| `Splugin` | Search |
+| `Stimeout` | Moderation |
+| `Sban` | Moderation |
+| `Sv2` | Developer |

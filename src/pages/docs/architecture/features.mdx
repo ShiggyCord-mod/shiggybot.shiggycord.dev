@@ -1,0 +1,130 @@
+# Features
+
+Features are the non-command behaviors of the bot. Each feature lives in `Features/` (except `PresenceFeature` which is in `Discord/`).
+
+## AutoroleFeature
+
+Assigns a role to members when they join the server.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/AutoroleFeature.cs` |
+| Event | `GuildMemberUpdated` |
+| Config key | `WELCOME_ROLE_ID` |
+
+On `GuildMemberUpdated`, if the member's `JoinedAt` is within 5 seconds of the current time (indicating a fresh join rather than a profile update), the feature reads the guild's `WelcomeRoleId` from the `GuildConfig` database table and assigns the role.
+
+**Prerequisites:** `GatewayIntents.GuildMembers` must be enabled. The bot must have **Manage Roles** permission. The role must be below the bot's highest role in the role hierarchy.
+
+## CodePreviewFeature
+
+Detects URLs pointing to code on GitHub, GitLab, and other forges, and posts an inline preview of the file contents.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/CodePreviewFeature.cs` |
+| Event | `MessageReceived` |
+| Trigger | Message contains a URL matching known code forge patterns |
+
+The feature runs **before** command dispatch — it intercepts `MessageReceived` and checks for code URLs. If found, it fetches the raw file content and posts a formatted preview.
+
+## CommitPreviewFeature
+
+Provides paginated commit diff previews for GitHub commit URLs.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/CommitPreviewFeature.cs` |
+| Event | `MessageReceived` |
+| Trigger | Message contains a GitHub commit URL |
+| Cache | `ConcurrentDictionary` + `Queue`, max 100 entries, FIFO eviction |
+
+When a GitHub commit URL is detected, the feature fetches the commit diff and stores it in a cache. It posts the first page of the diff with **Next** and **Previous** buttons. Button clicks are handled by `TryHandleButton`.
+
+The cache maps commit IDs to preview data. When the cache exceeds 100 entries, the oldest entry is evicted (FIFO).
+
+## MonitorService
+
+Polls GitHub for new commits, pull requests, and star/issue changes on the configured repository.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/MonitorService.cs` |
+| Interval | 5 minutes |
+| Trigger | Periodic timer |
+| Dedup | `HashSet<EventId>` in memory (resets on restart) |
+| HTTP timeout | 15 seconds |
+
+The service polls `GET /repos/{owner}/{repo}/events` every 5 minutes. It tracks known event IDs in a `HashSet`. New events (commits, PRs, stars) are posted to the configured webhook channel.
+
+**First poll:** Caches the current state without posting anything. Only subsequent polls trigger notifications.
+
+**Reset on restart:** The in-memory `HashSet` is empty after restart, so the first poll after restart caches state again.
+
+## BanCheckService
+
+Schedules unban execution for timed bans.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/BanCheckService.cs` |
+| Trigger | One-shot timer (not periodic) |
+| Lock | `System.Threading.Lock` (C# 13) |
+
+See [Key Patterns](/architecture/patterns) for the one-shot timer algorithm.
+
+## GitHubStatsService
+
+Polls GitHub for star, fork, and open-issue counts for presence rotation.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/GitHubStatsService.cs` |
+| Data | `stars`, `forks`, `open_issues_count` |
+
+## PluginService
+
+Fetches and caches a remote plugin index.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/PluginService.cs` |
+| Cache | In-memory, 60-minute TTL |
+| Search | Levenshtein distance |
+
+Used by the `Splugin` command.
+
+## WebhookLogger
+
+Posts error messages to a Discord webhook.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/WebhookLogger.cs` |
+| Trigger | Called manually with exception info |
+| Ping | Hardcoded user ID `879393496627306587` |
+
+## EphemeralButtonService
+
+Manages one-shot button interactions.
+
+| Property | Value |
+|----------|-------|
+| File | `Features/EphemeralButtonService.cs` |
+| Storage | `ConcurrentDictionary<string, Func<SocketMessageComponent, Task>>` |
+| Lifecycle | Single use — removed on first click |
+
+A command registers a button handler with a custom ID. When the button is clicked, the handler is invoked and the entry is removed. Subsequent clicks on the same button get the "not available" fallback.
+
+## PresenceFeature
+
+Rotates the bot's activity status.
+
+| Property | Value |
+|----------|-------|
+| File | `Discord/PresenceFeature.cs` |
+| Interval | `PRESENCE_INTERVAL` seconds |
+| Rotation | 4 templates (stars, forks, issues, help) |
+| Gate | `volatile bool _updating` |
+
+See [Key Patterns](/architecture/patterns) for the rotation algorithm.

@@ -1,0 +1,58 @@
+# Utilities
+
+The `Utils/` directory contains helper classes used across the codebase.
+
+## Known utilities
+
+### String helpers
+
+Common string operations used throughout the codebase:
+
+- Case-insensitive comparison utilities
+- Argument parsing helpers (splitting command arguments with quoted string support)
+
+### Time parsing
+
+The `Sban` command accepts durations in formats like `7d`, `30m`, `2h`, `1w`. A utility method parses these strings into `TimeSpan` values:
+
+| Suffix | Unit | Example |
+|--------|------|---------|
+| `s` | Seconds | `30s` |
+| `m` | Minutes | `30m` |
+| `h` | Hours | `2h` |
+| `d` | Days | `7d` |
+| `w` | Weeks | `1w` |
+
+The parser is case-insensitive and accepts decimal values.
+
+### Embed colors
+
+`V1EmbedBuilder` provides preset color constants matching the bot's mocha color palette:
+
+| Constant | Hex | Usage |
+|----------|-----|-------|
+| `ColorPrimary` | `#D7B9AE` | Default embed color |
+| `ColorSuccess` | `#4CAF50` | Success messages |
+| `ColorError` | `#F44336` | Error messages |
+| `ColorWarning` | `#FF9800` | Warning messages |
+
+### HttpClient pattern
+
+Several classes create `static readonly HttpClient` instances:
+
+```csharp
+private static readonly HttpClient _http = new();
+```
+
+This is intentional — `HttpClient` is designed to be shared via static instances to avoid socket exhaustion from repeated creation and disposal. However, most instances lack an explicit `Timeout` (defaulting to 100 seconds).
+
+**Best practice:** Always set an explicit timeout:
+
+```csharp
+private static readonly HttpClient _http = new()
+{
+    Timeout = TimeSpan.FromSeconds(15)
+};
+```
+
+`MonitorService` is the only class that currently follows this pattern.

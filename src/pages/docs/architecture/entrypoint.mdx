@@ -1,0 +1,95 @@
+# Entrypoint: Program.cs
+
+`Program.cs` uses C# top-level statements (available since C# 10). It is the single entrypoint for the entire application.
+
+## Structure
+
+```csharp
+// 1. Global exception handlers
+AppDomain.CurrentDomain.UnhandledException += (sender, args) => { ... };
+TaskScheduler.UnobservedTaskException += (sender, args) => { ... };
+
+// 2. Load configuration
+BotConfig config = BotConfig.LoadFromConfiguration();
+
+// 3. Build configuration-like bag (optional AppConfiguration)
+var appConfig = new AppConfiguration();
+
+// 4. Create and start the Discord client service
+DiscordClientService client = new(config, appConfig);
+await client.StartAsync();
+
+// 5. Block forever
+await Task.Delay(-1);
+```
+
+## Phase 1: Global exception handlers
+
+Two handlers catch exceptions that would otherwise terminate the process without logging:
+
+### AppDomain.CurrentDomain.UnhandledException
+
+Catches exceptions thrown on non-thread-pool threads — for example, exceptions in `Timer` callbacks or finalizers. These exceptions terminate the process but are logged first.
+
+```csharp
+AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+{
+    var ex = args.ExceptionObject as Exception;
+    Console.Error.WriteLine($"FATAL: {ex?.Message}");
+    // WebhookLogger is not available here — logging to stderr only
+};
+```
+
+### TaskScheduler.UnobservedTaskException
+
+Catches exceptions from `Task` instances that were not awaited and whose exception was not observed before the garbage collector collected them.
+
+```csharp
+TaskScheduler.UnobservedTaskException += (sender, args) =>
+{
+    Console.Error.WriteLine($"UNOBSERVED: {args.Exception.Message}");
+    args.SetObserved(); // Prevents the process from crashing
+};
+```
+
+`SetObserved()` marks the exception as handled so the process continues running.
+
+## Phase 2: Load configuration
+
+`BotConfig.LoadFromConfiguration()` reads all config sources and returns a populated `BotConfig` instance. See [Config System](/architecture/config-system) for details.
+
+## Phase 3: Create DiscordClientService
+
+The `DiscordClientService` constructor receives the config and an `AppConfiguration` bag. It creates the `DiscordSocketClient`, initializes all features, and prepares event handlers.
+
+```csharp
+DiscordClientService client = new(config, appConfig);
+```
+
+## Phase 4: StartAsync
+
+`client.StartAsync()` runs synchronously (it is not a background service). It:
+
+1. Initializes the database.
+2. Creates and wires all feature instances.
+3. Logs in and connects to Discord.
+4. Starts background services (ban check, monitor, presence).
+5. Returns.
+
+## Phase 5: Block
+
+```csharp
+await Task.Delay(-1);
+```
+
+This keeps the process alive indefinitely. The `Task.Delay(-1)` never completes. The process only exits on `Ctrl+C`, `SIGTERM`, or a fatal unhandled exception.
+
+## Why no generic host?
+
+The decision to avoid `Host.CreateDefaultBuilder()` is intentional:
+
+- Simplicity — no dependency injection container to configure.
+- Transparency — every dependency is visible in the code.
+- Control — no hidden behavior from hosted service lifecycle, configuration providers, or logging infrastructure.
+
+The tradeoff is that every new feature requires manual wiring in `DiscordClientService`.

@@ -1,0 +1,94 @@
+# Database
+
+ShiggyBot uses SQLite via `Microsoft.Data.Sqlite` for persistent data storage.
+
+## Connection model
+
+A single `SqliteConnection` is opened at startup and kept open for the lifetime of the process:
+
+```csharp
+_connection = new SqliteConnection($"Data Source={dbPath}");
+await _connection.OpenAsync();
+```
+
+**Thread safety:** The connection is not thread-safe. The bot uses single-threaded access by design — all database operations happen on Discord.NET's gateway thread or timer callbacks, never concurrently.
+
+**Database path:** `Path.Combine(AppContext.BaseDirectory, "shiggybot.db")`
+
+## Schema
+
+Tables are created in `DatabaseService.InitializeAsync()` via `CREATE TABLE IF NOT EXISTS`:
+
+### TimedBans
+
+```sql
+CREATE TABLE IF NOT EXISTS TimedBans (
+    Id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    GuildId     TEXT NOT NULL,
+    UserId      TEXT NOT NULL,
+    BanTime     TEXT NOT NULL,
+    UnbanTime   TEXT NOT NULL,
+    Reason      TEXT,
+    ModeratorId TEXT
+);
+```
+
+| Column | Type | Content |
+|--------|------|---------|
+| `Id` | INTEGER | Auto-incrementing primary key |
+| `GuildId` | TEXT | Discord guild snowflake (stringified) |
+| `UserId` | TEXT | Discord user snowflake (stringified) |
+| `BanTime` | TEXT | ISO 8601 timestamp when the ban was issued |
+| `UnbanTime` | TEXT | ISO 8601 timestamp when the ban should be lifted |
+| `Reason` | TEXT | Optional reason for the ban |
+| `ModeratorId` | TEXT | Discord snowflake of the moderator who issued the ban |
+
+### DisabledCommands
+
+```sql
+CREATE TABLE IF NOT EXISTS DisabledCommands (
+    GuildId     TEXT NOT NULL,
+    CommandName TEXT NOT NULL,
+    PRIMARY KEY (GuildId, CommandName)
+);
+```
+
+| Column | Type | Content |
+|--------|------|---------|
+| `GuildId` | TEXT | Discord guild snowflake |
+| `CommandName` | TEXT | Upper-invariant command name |
+
+Used by `Sdisable` / `Senable`. Checked by `CommandHandler` before each command execution.
+
+### GuildConfig
+
+```sql
+CREATE TABLE IF NOT EXISTS GuildConfig (
+    GuildId       TEXT NOT NULL PRIMARY KEY,
+    WelcomeRoleId TEXT
+);
+```
+
+| Column | Type | Content |
+|--------|------|---------|
+| `GuildId` | TEXT | Discord guild snowflake |
+| `WelcomeRoleId` | TEXT | Role ID assigned on member join |
+
+Set via `Ssetwelcome` or the `WELCOME_ROLE_ID` config key.
+
+## Database conventions
+
+| Data type | Storage | Reason |
+|-----------|---------|--------|
+| Guild/user IDs | `TEXT` (stringified) | SQLite INTEGER is limited to 64-bit signed. Discord snowflakes can exceed this in some operations. String avoids overflow. |
+| Dates/timestamps | `TEXT` (ISO 8601) | Human-readable, sortable, timezone-aware. |
+| Booleans | Not used | Not needed in the current schema. |
+
+**Parameterized queries:** All queries use `@parameters` to prevent SQL injection:
+
+```csharp
+cmd.Parameters.AddWithValue("@guildId", guildId.ToString(CultureInfo.InvariantCulture));
+cmd.Parameters.AddWithValue("@value", value);
+```
+
+**CultureInfo.InvariantCulture:** Always use `CultureInfo.InvariantCulture` for `ToString()` conversions of database values to ensure consistent formatting across different system locales.

@@ -1,0 +1,74 @@
+# Prerequisites
+
+The following tools and accounts are required to build and run ShiggyBot.
+
+## .NET 10 SDK
+
+ShiggyBot targets .NET 10 (C# 13). The SDK is required for both building and running.
+
+| | Minimum |
+|---|---------|
+| SDK | .NET 10 SDK (`10.0.x`) |
+| Runtime | .NET 10 runtime (`10.0.x`) |
+
+Download from the [official .NET download page](https://dotnet.microsoft.com/en-us/download/dotnet/10.0). Verify after installation:
+
+```bash
+dotnet --version
+# Expected: 10.x.x (e.g., 10.0.100)
+```
+
+### Linux install
+
+On Ubuntu/Debian:
+
+```bash
+# Register Microsoft repository
+wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo apt update
+
+# Install SDK
+sudo apt install -y dotnet-sdk-10.0
+```
+
+### macOS install
+
+Using [Homebrew](https://brew.sh):
+
+```bash
+brew install dotnet-sdk
+```
+
+Or download the official macOS installer from the .NET website.
+
+### Windows install
+
+Download and run the .NET 10 SDK installer from the official download page. The installer adds `dotnet` to your PATH automatically.
+
+## Discord bot token
+
+A Discord bot token is the only **required** configuration value. You obtain it from the [Discord Developer Portal](https://discord.com/developers/applications). See the [Discord Portal guide](/setup/discord-portal) for details.
+
+## SQLite
+
+SQLite is the database engine. No installation is needed — .NET 10 ships with `Microsoft.Data.Sqlite` as a NuGet dependency. The database file (`shiggybot.db`) is created automatically on first run.
+
+## Git
+
+Required for cloning the repository and contributing:
+
+```bash
+git --version
+# Expected: git version 2.x or later
+```
+
+## Optional: GitHub personal access token
+
+Without a token, GitHub API requests are limited to 60 requests per hour. With a token, the limit increases to 5,000 per hour.
+
+Create one at [GitHub Settings > Tokens](https://github.com/settings/tokens) with the `public_repo` scope (or `repo` for private repositories).
+
+## Optional: Hugging Face token
+
+The `HF_TOKEN` config key exists for future AI-related features. It is currently unused.

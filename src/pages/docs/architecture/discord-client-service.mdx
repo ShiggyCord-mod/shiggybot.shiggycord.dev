@@ -1,0 +1,143 @@
+# DiscordClientService
+
+`DiscordClientService` is the main orchestrator. It creates the `DiscordSocketClient`, initializes every feature, wires all event handlers, and manages the connection lifecycle.
+
+## Gateway configuration
+
+```csharp
+DiscordSocketConfig config = new()
+{
+    GatewayIntents = GatewayIntents.Guilds
+                   | GatewayIntents.GuildMembers
+                   | GatewayIntents.GuildMessages
+                   | GatewayIntents.MessageContent,
+    LogLevel = LogSeverity.Info,
+    AlwaysDownloadUsers = true,
+    MessageCacheSize = 50,
+};
+```
+
+### GatewayIntents
+
+The bot requests four intents:
+
+| Intent | Why |
+|--------|-----|
+| `Guilds` | Guild metadata, channel enumeration, role list |
+| `GuildMembers` | Member join/leave events (autorole) |
+| `GuildMessages` | Message receive/update/delete events |
+| `MessageContent` | Read `.Content` on messages for command parsing |
+
+### AlwaysDownloadUsers
+
+When `true`, Discord.NET downloads the entire user list for each guild on connect. This ensures that when a `GuildMemberUpdated` event fires, the user object is already cached. Required for autorole to function reliably.
+
+**Downside:** Increases login time and memory usage for large guilds (5000+ members).
+
+### MessageCacheSize
+
+Set to 50. This caches the last 50 messages per channel in memory. Used by commands that need message context (e.g., purge, reply-to detection).
+
+### LogLevel
+
+`LogSeverity.Info` enables Discord.NET internal logging at Info level. Messages are forwarded to `Console.WriteLine`.
+
+## Startup sequence
+
+The `StartAsync()` method executes these steps sequentially:
+
+### Step 1: Database initialization
+
+Calls `DatabaseService.InitializeAsync()` which runs `CREATE TABLE IF NOT EXISTS` for all required tables.
+
+### Step 2: Feature construction
+
+Creates instances of every feature class:
+
+```csharp
+_commandHandler = new CommandHandler(...);
+_banCheckService = new BanCheckService(...);
+_monitorService = new MonitorService(...);
+_autoroleFeature = new AutoroleFeature(_client, _db, ...);
+_presenceFeature = new PresenceFeature(...);
+_gitHubStatsService = new GitHubStatsService(...);
+_codePreviewFeature = new CodePreviewFeature(...);
+_commitPreviewFeature = new CommitPreviewFeature(...);
+_pluginService = new PluginService(...);
+_webhookLogger = new WebhookLogger(...);
+_ephemeralButtonService = new EphemeralButtonService(...);
+```
+
+### Step 3: Feature wiring
+
+Each feature's `Start()` method registers event handlers on the Discord client:
+
+```csharp
+_autoroleFeature.Start();       // wires GuildMemberUpdated
+_presenceFeature.Start();       // wires nothing (timer-based)
+_codePreviewFeature.Start();    // wires MessageReceived (before command dispatch)
+_commitPreviewFeature.Start();  // wires MessageReceived
+```
+
+### Step 4: Login and connect
+
+```csharp
+await _client.LoginAsync(TokenType.Bot, _config.DiscordToken);
+await _client.StartAsync();
+```
+
+`LoginAsync` authenticates with Discord. `StartAsync` connects to the gateway. Both must succeed for the bot to come online.
+
+### Step 5: Event wiring
+
+After connection, remaining event handlers are attached:
+
+```csharp
+_client.Ready += OnReady;
+_client.MessageReceived += _commandHandler.HandleMessage;
+_client.ButtonExecuted += OnButtonExecuted;
+_client.SelectMenuExecuted += OnSelectMenuExecuted;
+```
+
+### Step 6: Background services start
+
+```csharp
+_banCheckService.Start();    // queries DB, arms one-shot timer
+_monitorService.Start();     // begins 5-minute GitHub polling
+```
+
+### Step 7: Return control to Program.cs
+
+`StartAsync()` completes. `Program.cs` then blocks with `Task.Delay(-1)`.
+
+## Client events
+
+### Ready
+
+Logs the bot's connected guild count, shard information, and latency.
+
+### MessageReceived
+
+First handled by `CodePreviewFeature` for inline code link detection. Then by `CommandHandler` for prefix-based command dispatch.
+
+### ButtonExecuted
+
+The button dispatch chain: `EphemeralButtonService.TryHandle` → `CommitPreviewFeature.TryHandleButton` → fallback message.
+
+### SelectMenuExecuted
+
+Currently only used by the help command's category select menu (V2 mode).
+
+## Lifecycle
+
+`Dispose()` unregisters all feature event handlers and disposes the Discord client:
+
+```csharp
+public void Dispose()
+{
+    _myFeature?.Unregister();
+    _client?.Dispose();
+}
+```
+
+Note that the process does not normally call `Dispose()` — it terminates via `Ctrl+C` or `SIGTERM`, at which point the OS reclaims all resources.

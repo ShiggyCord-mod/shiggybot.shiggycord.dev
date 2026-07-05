@@ -1,0 +1,124 @@
+# New Feature
+
+Features are event-driven behaviors that run outside the command dispatch system. This page covers adding a new feature.
+
+## 1. Create the feature class
+
+Place it in `Features/`:
+
+```csharp
+using Discord.WebSocket;
+
+namespace ShiggyBot.Features;
+
+internal sealed class MyFeature
+{
+    private readonly DiscordSocketClient _client;
+
+    public MyFeature(DiscordSocketClient client)
+    {
+        _client = client;
+    }
+
+    public void Start()
+    {
+        _client.MessageReceived += OnMessageReceived;
+    }
+
+    public void Unregister()
+    {
+        _client.MessageReceived -= OnMessageReceived;
+    }
+
+    private async Task OnMessageReceived(SocketMessage msg)
+    {
+        // Feature logic
+    }
+}
+```
+
+## 2. Wire it in DiscordClientService
+
+Add a field:
+
+```csharp
+private MyFeature? _myFeature;
+```
+
+Initialize and start before `ConnectAsync`:
+
+```csharp
+_myFeature = new MyFeature(_client);
+_myFeature.Start();
+```
+
+Wire disposal:
+
+```csharp
+public void Dispose()
+{
+    _myFeature?.Unregister();
+    // ... existing disposal
+}
+```
+
+## Feature lifecycle
+
+| Phase | Method | When |
+|-------|--------|------|
+| Construction | Constructor | Before `ConnectAsync` |
+| Start | `Start()` | Registers event handlers |
+| Stop | `Unregister()` | Removes event handlers |
+| Dispose | `Dispose()` | Cleanup resources |
+
+## Event handler best practices
+
+### Async void handlers
+
+Discord.NET event handlers are `async void` (not `async Task`). Exceptions thrown in `async void` handlers crash the process. Always wrap handler bodies in `try/catch`:
+
+```csharp
+private async Task OnMessageReceived(SocketMessage msg)
+{
+    try
+    {
+        // Feature logic
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"MyFeature error: {ex.Message}");
+    }
+}
+```
+
+### Fire-and-forget safety
+
+If you invoke a handler via fire-and-forget (e.g., `_ = handler(args)`), wrap the lambda:
+
+```csharp
+_ = Task.Run(async () =>
+{
+    try
+    {
+        await handler(args);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Handler error: {ex.Message}");
+    }
+});
+```
+
+This prevents unobserved task exceptions from triggering `TaskScheduler.UnobservedTaskException`.
+
+## Feature vs command
+
+| | Feature | Command |
+|--|---------|---------|
+| Activation | Event-driven | Message prefix + name |
+| File location | `Features/` | `Commands/<Category>/` |
+| Registration | Wire in `DiscordClientService` | `CommandHandler.RegisterCommands()` |
+| Lifecycle | Start/Stop/Dispose | Stateless (one instance per command) |
+| Response | May not respond directly | Always responds |
+
+If your new behavior is triggered by a user message with a specific prefix, it should be a **command**, not a feature.

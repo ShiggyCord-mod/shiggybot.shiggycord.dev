@@ -1,0 +1,116 @@
+# Configuration Keys
+
+Complete reference of every configuration key that `BotConfig.LoadFromConfiguration()` reads. All keys are read as strings and parsed by the bot.
+
+## Required
+
+### DISCORD_TOKEN
+
+The bot token from the Discord Developer Portal (Bot page). This is the only key without a default value. If missing or empty, the bot creates the clients with null tokens and registers no commands.
+
+| Property | Value |
+|----------|-------|
+| Required | Yes |
+| Default | None |
+| Format | 70+ character base-10 ID followed by a secret portion |
+| Example | `YOUR_DISCORD_BOT_TOKEN_HERE` |
+
+### PREFIX
+
+The character or string that must prefix a message for it to be treated as a command.
+
+| Property | Value |
+|----------|-------|
+| Required | No |
+| Default | `S` |
+| Format | Any string |
+| Example | `S`, `!`, `?`, `bot` |
+
+Commands are matched case-insensitively. `Sping`, `SPING`, and `sping` all trigger the ping command.
+
+## Optional — Presence
+
+### PRESENCE_STATUS
+
+The bot's online status shown in Discord's member list.
+
+| Property | Value |
+|----------|-------|
+| Default | `online` |
+| Valid values | `online`, `idle`, `dnd`, `invisible` |
+
+### PRESENCE_INTERVAL
+
+How often the bot's activity status text rotates, in seconds.
+
+| Property | Value |
+|----------|-------|
+| Default | `300` |
+| Unit | Seconds |
+| Example | `120` (rotate every 2 minutes) |
+
+## Optional — Logging
+
+### LOG_WEBHOOK_URL
+
+A Discord webhook URL for posting error messages. When configured, unhandled exceptions are sent to this webhook with a ping to the hardcoded user ID `879393496627306587`.
+
+| Property | Value |
+|----------|-------|
+| Default | Empty (logging disabled) |
+| Format | `https://discord.com/api/webhooks/{id}/{token}` |
+
+## Optional — AI
+
+### HF_TOKEN
+
+A Hugging Face API token. Reserved for future AI-adjacent features. Currently unused by any code path.
+
+## Optional — GitHub
+
+### GITHUB_TOKEN
+
+A GitHub personal access token used for authenticated API requests. Without it, the GitHub rate limit is 60 requests/hour.
+
+| Property | Value |
+|----------|-------|
+| Default | Empty (unauthenticated) |
+| Scopes | `public_repo` (or `repo` for private repos) |
+
+### GITHUB_REPO
+
+The repository to monitor for commits, pull requests, and star/forks/issue counts.
+
+| Property | Value |
+|----------|-------|
+| Default | `kmmiio99o/ShiggyCord` |
+| Format | `owner/repo` |
+
+### GITHUB_WEBHOOK_CHANNEL_ID
+
+The Discord channel ID where GitHub notifications are delivered.
+
+| Property | Value |
+|----------|-------|
+| Default | Empty (no notifications posted) |
+| Format | Discord snowflake (18+ digits) |
+
+## Optional — Development
+
+### DEV_GUILD_ID
+
+A test guild ID for development commands. Owner-only commands like `Sv1` and `Sv2` may use this for scoping.
+
+| Property | Value |
+|----------|-------|
+| Default | Empty |
+| Format | Discord snowflake (18+ digits) |
+
+### WELCOME_ROLE_ID
+
+The role ID to grant to new members on join. Set via the `Ssetwelcome` command or directly in config.
+
+| Property | Value |
+|----------|-------|
+| Default | Empty (disabled) |
+| Format | Discord snowflake (18+ digits) |

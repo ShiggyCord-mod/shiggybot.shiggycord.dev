@@ -1,0 +1,104 @@
+# Component Systems
+
+ShiggyBot has two parallel message component systems: V1 (legacy) and V2 (Discord's Components V2 format). Commands are assigned to one system based on which client is available.
+
+## V1 (Components/V1/)
+
+The V1 system uses Discord's traditional embed and component format. Messages are sent via direct REST API calls (`discord.com/api/v10`) rather than through Discord.NET's built-in send methods.
+
+### Key types
+
+| Type | Purpose |
+|------|---------|
+| `V1MessageBuilder` | Top-level message container |
+| `V1EmbedBuilder` | Embed with title, description, fields, color |
+| `V1ButtonBuilder` | Button with custom ID, label, style, emoji |
+| `V1SelectMenuBuilder` | Dropdown menu with options |
+
+### V1MessageBuilder usage
+
+```csharp
+V1MessageBuilder builder = new V1MessageBuilder()
+    .AddEmbed(new V1EmbedBuilder()
+        .WithTitle("Hello")
+        .WithDescription("World")
+        .WithColor(V1EmbedBuilder.ColorPrimary))
+    .AddButton(new V1ButtonBuilder()
+        .WithCustomId("my_button")
+        .WithLabel("Click me")
+        .WithStyle(V1ButtonStyle.Primary));
+
+await _v1Client.SendMessageAsync(channelId, builder);
+```
+
+### V1EmbedBuilder present colors
+
+| Constant | Hex |
+|----------|-----|
+| `ColorPrimary` | `#D7B9AE` |
+| `ColorSuccess` | `#4CAF50` |
+| `ColorError` | `#F44336` |
+| `ColorWarning` | `#FF9800` |
+
+## V2 (Components/V2/)
+
+The V2 system uses Discord's newer Components V2 format, which supports rich layouts: colored containers, text displays, media galleries, separators, and thumbnails.
+
+Messages are flagged with `1 << 15` in the message flags to indicate V2 format.
+
+### Key types
+
+| Type | Purpose |
+|------|---------|
+| `ContainerBuilder` | Colored section container (header background) |
+| `SectionBuilder` | Grouped component section |
+| `TextDisplayBuilder` | Formatted text block with markdown |
+| `MediaGalleryBuilder` | Image/media gallery |
+| `ThumbnailBuilder` | Thumbnail image |
+| `SeparatorBuilder` | Visual divider |
+
+### V2MessageBuilder usage
+
+```csharp
+V2MessageBuilder builder = new V2MessageBuilder()
+    .AddContainer(new ContainerBuilder()
+        .WithAccentColor(V2ContainerColor.Primary)
+        .AddSection(new SectionBuilder()
+            .AddTextDisplay(new TextDisplayBuilder()
+                .WithContent("Hello World"))));
+
+await _v2Client.SendMessageAsync(channelId, builder);
+```
+
+### Ambiguity warning
+
+Discord.Net 3.20.1 ships its own `ContainerBuilder`, `SectionBuilder`, and `TextDisplayBuilder` under the `Discord` namespace. Files importing both `using Discord;` and `using ShiggyBot.Components.V2;` will have ambiguous type references.
+
+**Fix:** Use `global::Discord.` qualification:
+
+```csharp
+using global::Discord.ContainerBuilder;
+using global::Discord.SectionBuilder;
+using global::Discord.TextDisplayBuilder;
+```
+
+Or use using-aliases:
+
+```csharp
+using DiscordContainerBuilder = global::Discord.ContainerBuilder;
+```
+
+## Selection criteria
+
+| Factor | V1 | V2 |
+|--------|----|----|
+| Format | Traditional embeds + components | Containers, sections, galleries |
+| Complexity | Lower | Higher |
+| Rich layout | No (embeds only) | Yes (colored containers) |
+| Client type | `ComponentsV1Client` | `ComponentsV2Client` |
+| Flag | Standard | `1 << 15` |
+| Good for | Simple commands, modals | Rich formatted messages, help menus |
+
+## Why both?
+
+V2 components are newer and not all Discord clients support them. V1 is the fallback for commands that don't need V2's rich layout features. The dual system will likely converge to V2-only in the future.

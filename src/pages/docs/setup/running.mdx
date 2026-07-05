@@ -1,0 +1,55 @@
+# Running
+
+Once built, the bot can be started with a single command. This page covers first launch, verifying the bot is online, and troubleshooting common problems.
+
+## Start the bot
+
+```bash
+dotnet build && dotnet run
+```
+
+The `dotnet run` command compiles (if needed) and executes the project. The `&&` ensures the bot only runs if the build succeeds.
+
+## Configuration
+
+Before running, the bot needs a `DISCORD_TOKEN`. Create a `config.txt` file in the project root with:
+
+```
+DISCORD_TOKEN=your_token_here
+```
+
+Replace `your_token_here` with the token copied from the Discord Developer Portal. See [Configuration Sources](/configuration/sources) for all available config options and file formats.
+
+## Startup sequence
+
+On first run, the bot performs these steps in order:
+
+1. **Load configuration** — reads from `appsettings.json`, environment variables, and `config.txt` (later overrides earlier).
+2. **Initialize database** — creates `shiggybot.db` in the output directory with tables `TimedBans`, `DisabledCommands`, and `GuildConfig`.
+3. **Create Discord client** — configures gateway intents, log level, message cache.
+4. **Initialize features** — creates all feature instances and wires their event handlers.
+5. **Connect to Discord** — logs in with the bot token and connects to the gateway.
+6. **Start background services** — arms the ban check scheduler, starts GitHub monitoring, begins presence rotation.
+7. **Block indefinitely** — `Task.Delay(-1)` keeps the process alive.
+
+## Verifying the bot is online
+
+1. Open Discord and check that the bot appears **online** (green dot) in the member list.
+2. In any channel the bot can see, type `Sping`.
+3. The bot should respond with its WebSocket latency.
+
+If the bot responds, it is fully operational.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| Bot stays offline (gray dot) | No token or invalid token | Check `DISCORD_TOKEN` in your config file. Verify the token was copied correctly from the Developer Portal. |
+| Bot online but does not respond | Message Content Intent disabled | Go to Developer Portal > Bot > Privileged Gateway Intents > enable **Message Content Intent**. |
+| Commands not working after prefix change | Incorrect prefix | The default prefix is `S`. If you changed `PREFIX` in config, use the new prefix. |
+| Database errors | No write permission in output directory | Ensure the directory where `shiggybot.db` is created has write permissions. |
+| `dotnet run` fails | Missing .NET 10 SDK | Run `dotnet --version` and verify it returns `10.x.x`. |
+
+## Stopping the bot
+
+Press `Ctrl+C` in the terminal where the bot is running. The process will terminate gracefully. Note that Discord.NET may take a few seconds to disconnect from the gateway.

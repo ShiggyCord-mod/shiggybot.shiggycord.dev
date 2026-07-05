@@ -1,0 +1,184 @@
+# Key Patterns
+
+This page documents important implementation patterns in ShiggyBot.
+
+## BanCheckService: one-shot timer
+
+Unlike a periodic polling approach (which would query the database every N seconds), the ban check uses a **one-shot timer** pattern:
+
+```
+Startup
+  → Query DB for earliest future UnbanTime
+  → Calculate delay = UnbanTime - UtcNow + 5s buffer
+  → Create System.Threading.Timer with that delay
+  → Timer fires
+    → Unban user
+    → Remove DB entry
+    → Query for next scheduled unban
+    → Re-arm timer with new delay
+```
+
+Benefits: Zero CPU usage between scheduled unbans. No unnecessary database queries.
+
+The timer reference is protected by `System.Threading.Lock` (C# 13 / .NET 9+) for thread-safe re-arming:
+
+```csharp
+private Timer? _timer;
+private readonly Lock _lock = new();
+
+private void ArmTimer(TimeSpan delay)
+{
+    lock (_lock)
+    {
+        _timer?.Dispose();
+        _timer = new Timer(OnTimerFired, null, delay, Timeout.InfiniteTimeSpan);
+    }
+}
+```
+
+## In-memory caches
+
+Three classes use in-memory caches with FIFO eviction:
+
+| Cache | Storage | Max size | Eviction |
+|-------|---------|----------|----------|
+| Commit preview data | `ConcurrentDictionary<K, V>` + `Queue<K>` | 100 | FIFO |
+| Mpreg image results | `ConcurrentDictionary<K, V>` + `Queue<K>` | 100 | FIFO |
+| Plugin index | Raw string | 1 | TTL (60 min) |
+
+The FIFO eviction pattern:
+
+```csharp
+private static readonly ConcurrentDictionary<string, CommitPreview> _cache = new();
+private static readonly Queue<string> _order = new();
+private static readonly Lock _lock = new();
+
+private void CacheAdd(string key, CommitPreview value)
+{
+    lock (_lock)
+    {
+        if (_order.Count >= 100)
+        {
+            var oldest = _order.Dequeue();
+            _cache.TryRemove(oldest, out _);
+        }
+        _cache[key] = value;
+        _order.Enqueue(key);
+    }
+}
+```
+
+## PresenceFeature rotation
+
+The presence feature cycles through 4 templates:
+
+1. `"Watching {stars} stars on {repo}"`
+2. `"Watching {forks} forks on {repo}"`
+3. `"Watching {open_issues} issues on {repo}"`
+4. `"{prefix}help for commands"`
+
+Where `{stars}`, `{forks}`, `{open_issues}` are fetched by `GitHubStatsService`, and `{prefix}` is the configured command prefix.
+
+### Gate: volatile bool
+
+```csharp
+private volatile bool _updating;
+
+private async Task RotatePresence()
+{
+    if (_updating) return; // Skip overlapping ticks
+    _updating = true;
+    try
+    {
+        // ... set next activity
+    }
+    finally
+    {
+        _updating = false;
+    }
+}
+```
+
+The `volatile` keyword ensures the flag is read directly from memory (not cached in a register), so timer ticks on different threads always see the current value.
+
+### MDX note
+
+In the presence templates, the braces are literal text, not C# string interpolation or MDX expressions. When documenting these templates in MDX, the braces must be escaped with backticks:
+
+```
+Watching \`{stars}\` stars on \`{repo}\`
+```
+
+Without backticks, MDX interprets `{stars}` as a JavaScript expression and throws a compilation error.
+
+## Static HttpClient instances
+
+Six or more classes create their own `static readonly HttpClient`:
+
+| Class | Timeout |
+|-------|---------|
+| `MonitorService` | 15 seconds |
+| Others | 100 seconds (default) |
+
+The default 100-second timeout comes from `HttpClientHandler` defaults. For outbound API calls, this is generally acceptable but can cause long hangs if a service is unresponsive.
+
+**Recommended pattern for new instances:**
+
+```csharp
+private static readonly HttpClient _http = new()
+{
+    Timeout = TimeSpan.FromSeconds(15)
+};
+```
+
+## Interaction dispatch (button clicks)
+
+When a button is clicked, the `ButtonExecuted` event fires. The dispatch chain:
+
+```
+ButtonExecuted
+  → 1. EphemeralButtonService.TryHandle
+    → Checks ConcurrentDictionary for custom ID
+    → If found: invoke handler, remove entry (TryRemove)
+    → Return true
+  → 2. CommitPreviewFeature.TryHandleButton
+    → Checks if custom ID matches "commit_prev:{url}" or "commit_next:{url}"
+    → If matched: show cached prev/next commit
+    → Return true
+  → 3. Fallback: respond "This button is no longer available."
+```
+
+Each handler checks if the custom ID matches its format. The first matching handler claims the interaction.
+
+## Build constraints
+
+| Constraint | Effect |
+|-----------|--------|
+| `TreatWarningsAsErrors=true` | Build fails on any warning |
+| `AnalysisMode=All` | All Roslyn analyzers at warning severity |
+| `GenerateDocumentationFile=true` | `CS1591` (missing XML doc) is a warning |
+| `IDE0058` | Silent (Discord.NET fluent builder patterns) |
+| `ServerGarbageCollection=false` | Workstation GC (lower latency, higher memory) |
+| `RuntimeIdentifier=linux-x64` | Hardcoded for local builds |
+| `PublishSingleFile=true` | Release builds produce single-file binary |
+
+**Workstation GC:** Disables server GC, which means the garbage collector uses per-process heap instead of per-CPU heaps. This results in lower memory allocation latency at the cost of higher total memory usage. Suitable for a long-running bot process.
+
+## XML doc requirements
+
+Every public and internal type, method, and property must have a `<summary>` comment:
+
+```csharp
+/// <summary>
+/// Handles the ping command, responding with the current gateway latency.
+/// </summary>
+internal sealed class PingCommand : ICommand
+{
+    /// <summary>
+    /// The command name used for dispatch.
+    /// </summary>
+    public string Name => "ping";
+}
+```
+
+Without doc comments, the build fails with `CS1591: Missing XML comment for publicly visible type or member`.

@@ -1,0 +1,71 @@
+# Publishing
+
+For production deployment, publish ShiggyBot as a single-file self-contained binary.
+
+## Single-file publish
+
+```bash
+dotnet publish -c Release -r linux-x64 --self-contained
+```
+
+This produces a standalone executable that includes the .NET runtime. No .NET SDK or runtime is required on the target machine.
+
+### What the flags mean
+
+| Flag | Effect |
+|------|--------|
+| `-c Release` | Release mode with optimizations enabled |
+| `-r linux-x64` | Target runtime identifier (Linux x86-64) |
+| `--self-contained` | Bundle the .NET runtime into the publish output |
+
+### Runtime identifiers
+
+The project file hardcodes `RuntimeIdentifier=linux-x64` in `PropertyGroup` for local builds. The CI workflow uses a matrix for multiple platforms:
+
+| RID | Platform |
+|-----|----------|
+| `win-x64` | Windows x86-64 |
+| `linux-x64` | Linux x86-64 |
+| `osx-x64` | macOS Intel |
+| `osx-arm64` | macOS Apple Silicon (CI only) |
+
+### Publish output
+
+```
+ShiggyBot/bin/Release/net10.0/linux-x64/publish/
+├── ShiggyBot              # Executable
+├── ShiggyBot.pdb          # Debug symbols (optional)
+├── config.txt             # Create this for configuration
+└── appsettings.json       # (optional) JSON config
+```
+
+The publish directory is self-contained. Copy the entire directory to any compatible Linux machine and run:
+
+```bash
+./ShiggyBot
+```
+
+No `dotnet` command is needed on the target machine because `--self-contained` bundles the runtime.
+
+## Configuration in production
+
+Place `config.txt` or `appsettings.json` next to the published executable. The bot looks for these files in the working directory (the directory where you run `./ShiggyBot`).
+
+## Publishing for other platforms
+
+Override the `RuntimeIdentifier` at publish time:
+
+```bash
+# Windows
+dotnet publish -c Release -r win-x64 --self-contained
+
+# macOS Intel
+dotnet publish -c Release -r osx-x64 --self-contained
+
+# macOS Apple Silicon
+dotnet publish -c Release -r osx-arm64 --self-contained
+```
+
+## Required file on target
+
+Only `ShiggyBot` (the executable) and your config file are strictly required. The `.pdb` file is optional and only needed for crash diagnostics.

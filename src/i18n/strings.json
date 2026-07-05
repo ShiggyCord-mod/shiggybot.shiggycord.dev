@@ -1,0 +1,291 @@
+{
+  "site": {
+    "title": "ShiggyBot",
+    "description": "A Discord bot built with C# 13 and .NET 10."
+  },
+  "nav": {
+    "home": "Home",
+
+    "setup": "Setup",
+    "setupPrerequisites": "Prerequisites",
+    "setupDiscordPortal": "Discord Portal",
+    "setupBuilding": "Building",
+    "setupRunning": "Running",
+    "setupPublishing": "Publishing",
+    "setupCiCd": "CI/CD",
+
+    "configuration": "Configuration",
+    "configurationKeys": "Keys",
+    "configurationSources": "Sources",
+    "configurationPermissions": "Permissions",
+
+    "architecture": "Architecture",
+    "architectureEntrypoint": "Entrypoint",
+    "architectureDiscordClientService": "Discord Client",
+    "architectureCommandSystem": "Command System",
+    "architectureComponentSystems": "Components",
+    "architectureFeatures": "Features",
+    "architectureServices": "Services",
+    "architectureDatabase": "Database",
+    "architectureUtilities": "Utilities",
+    "architectureConfigSystem": "Config System",
+    "architecturePatterns": "Patterns",
+
+    "commands": "Commands",
+    "extending": "Extending",
+    "extendingNewCommand": "New Command",
+    "extendingNewFeature": "New Feature",
+    "extendingNewData": "New Data",
+    "extendingStyleGuide": "Style Guide",
+    "extendingGotchas": "Gotchas"
+  },
+  "hero": {
+    "tag": "Open source · MIT license",
+    "headline": "ShiggyBot",
+    "subheadline": "A modular Discord bot built with C# 13 and .NET 10 using Discord.Net",
+    "cta": "Get Started",
+    "github": "GitHub"
+  },
+  "overview": {
+    "title": "What is ShiggyBot?",
+    "body": "A self-hosted Discord bot you configure, deploy, and extend. It connects to Discord via a bot token, loads modular commands, and initializes optional runtime features — autorole, presence updates, code previews, and more — at startup.",
+    "tech": [
+      { "label": "Language & Runtime", "value": "C# 13 / .NET 10" },
+      { "label": "Discord Library", "value": "Discord.Net 3.20.1" },
+      { "label": "Database", "value": "SQLite" },
+      { "label": "Image Processing", "value": "ImageSharp 3" },
+      { "label": "CI/CD", "value": "GitHub Actions" }
+    ]
+  },
+  "architecture": {
+    "title": "Architecture at a Glance",
+    "subtitle": "Modular, decoupled, and extensible by design.",
+    "principles": [
+      {
+        "title": "Modular",
+        "description": "Commands and features are plug-ins discovered at startup, making the bot easy to extend without touching core code."
+      },
+      {
+        "title": "Decoupled",
+        "description": "The core runtime has minimal knowledge of specific commands, keeping the system maintainable as it grows."
+      },
+      {
+        "title": "Configurable",
+        "description": "Settings drive behavior through config files and environment variables — no hardcoded values."
+      },
+      {
+        "title": "Observable",
+        "description": "Optional webhook logging for production monitoring, with per-event filtering and error reporting."
+      }
+    ],
+    "components": [
+      {
+        "name": "Program.cs",
+        "description": "Entry point — loads config, registers services, starts the bot"
+      },
+      {
+        "name": "DiscordClientService",
+        "description": "Central orchestrator — client lifecycle, event wiring, connection management"
+      },
+      {
+        "name": "CommandHandler",
+        "description": "Discovers and dispatches commands implementing ICommand"
+      },
+      {
+        "name": "Features",
+        "description": "Runtime capabilities — Autorole, Presence, CodePreview, and more"
+      },
+      {
+        "name": "DatabaseService",
+        "description": "SQLite persistence layer — bans, command state, guild settings"
+      },
+      {
+        "name": "WebhookLogger",
+        "description": "Optional webhook-based log sink for real-time monitoring"
+      }
+    ]
+  },
+  "features": {
+    "title": "Features",
+    "subtitle": "Everything you need to manage and engage your community.",
+    "items": [
+      {
+        "id": "moderation",
+        "title": "Moderation",
+        "description": "Timed bans, kick, timeout, purge, nuke, role management, and per-guild command gating."
+      },
+      {
+        "id": "codePreviews",
+        "title": "Code Previews",
+        "description": "Automatic inline previews of code from GitHub, GitLab, and other forges."
+      },
+      {
+        "id": "pluginSearch",
+        "title": "Plugin Search",
+        "description": "Remote plugin index with Levenshtein search and one-click ephemeral install."
+      },
+      {
+        "id": "funCommands",
+        "title": "Fun Commands",
+        "description": "Image compositing with ImageSharp, Google search links, and more."
+      },
+      {
+        "id": "autorole",
+        "title": "Autorole",
+        "description": "Automatic role assignment on member join. Configurable per guild."
+      },
+      {
+        "id": "gitHubStats",
+        "title": "GitHub Stats",
+        "description": "Rotating presence with repo stats, commit/PR/star monitoring."
+      }
+    ]
+  },
+  "techStack": {
+    "title": "Tech Stack",
+    "subtitle": "Built with modern tooling from the ground up.",
+    "items": [
+      { "label": "C# 13 / .NET 10", "sub": "Language & runtime" },
+      { "label": "Discord.Net 3.20.1", "sub": "Discord API library" },
+      { "label": "SQLite", "sub": "Database" },
+      { "label": "ImageSharp 3", "sub": "Image processing" },
+      { "label": "GitHub Actions", "sub": "CI/CD" }
+    ]
+  },
+  "commands": {
+    "title": "Commands",
+    "subtitle": "All commands are prefixed with {prefix}. Arguments in brackets are optional, angle brackets are required.",
+    "prefix": "S",
+    "categories": [
+      {
+        "name": "Utility",
+        "commands": [
+          {
+            "name": "help",
+            "signature": "help",
+            "description": "Shows the help menu. Uses an interactive select menu (V2) or falls back to embed-based help (V1)."
+          },
+          {
+            "name": "ping",
+            "signature": "ping",
+            "description": "Checks the bot's WebSocket latency."
+          },
+          {
+            "name": "note <key>",
+            "signature": "note <key>",
+            "description": "Shows one of 8 hard-coded notes about ShiggyCord. Supports reply-to."
+          }
+        ]
+      },
+      {
+        "name": "Moderation",
+        "commands": [
+          {
+            "name": "ban",
+            "signature": "ban <user> [duration] [reason]",
+            "description": "Bans a user, optionally timed (7d, 30m, etc.). Purges 7 days of messages. Supports reply-to shortcut. Persists to database."
+          },
+          {
+            "name": "kick",
+            "signature": "kick <user> [reason]",
+            "description": "Kicks a user from the server. Supports reply-to shortcut."
+          },
+          {
+            "name": "timeout",
+            "signature": "timeout <user> [duration]",
+            "description": "Times out a user. Supports reply-to shortcut."
+          },
+          {
+            "name": "purge",
+            "signature": "purge <count>",
+            "description": "Bulk-deletes messages (1–100). Subject to Discord's 14-day message deletion limit."
+          },
+          {
+            "name": "nuke",
+            "signature": "nuke confirm",
+            "description": "Clones the current channel and deletes the original. Admin only."
+          },
+          {
+            "name": "addrole",
+            "signature": "addrole <role>",
+            "description": "Adds a role to a user. Supports reply-to shortcut."
+          },
+          {
+            "name": "removerole",
+            "signature": "removerole <role>",
+            "description": "Removes a role from a user. Supports reply-to shortcut."
+          },
+          {
+            "name": "disable",
+            "signature": "disable <command>",
+            "description": "Disables a command per-guild. Requires ManageGuild permission. Persists to database."
+          },
+          {
+            "name": "enable",
+            "signature": "enable <command>",
+            "description": "Re-enables a disabled command per-guild. Requires ManageGuild permission."
+          }
+        ]
+      },
+      {
+        "name": "Search",
+        "commands": [
+          {
+            "name": "plugin",
+            "signature": "plugin <name>",
+            "description": "Searches a remote plugin index (60 min cache) using Levenshtein distance. Shows an ephemeral install button."
+          },
+          {
+            "name": "google",
+            "signature": "google <query>",
+            "description": "Generates a Google search link. Aliases: g, search."
+          }
+        ]
+      },
+      {
+        "name": "Fun",
+        "commands": [
+          {
+            "name": "mpreg",
+            "signature": "mpreg",
+            "description": "Composites the user's avatar using ImageSharp. Results cached in memory (100 items) and on disk."
+          }
+        ]
+      },
+      {
+        "name": "Core",
+        "commands": [
+          {
+            "name": "setwelcome",
+            "signature": "setwelcome <role>",
+            "description": "Sets the autorole for new members. Use disable, none, or off to disable."
+          },
+          {
+            "name": "v1",
+            "signature": "v1",
+            "description": "Owner-only command for testing V1 components."
+          },
+          {
+            "name": "v2",
+            "signature": "v2 [raw]",
+            "description": "Owner-only command for testing V2 components. Pass raw to see the JSON payload."
+          }
+        ]
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to get started?",
+    "description": "Clone the repo, configure your token, and run.\nZero external dependencies beyond Discord and SQLite.",
+    "setupButton": "View Setup Guide",
+    "commandsButton": "Browse Commands"
+  },
+  "footer": {
+    "copyright": "MIT License"
+  },
+  "sidebar": {
+    "gettingStarted": "Getting Started",
+    "reference": "Reference",
+    "development": "Development"
+  }
+}

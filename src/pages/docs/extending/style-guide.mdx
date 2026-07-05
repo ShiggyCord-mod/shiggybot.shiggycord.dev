@@ -1,0 +1,112 @@
+# Style Guide
+
+This page documents the code conventions expected in ShiggyBot contributions.
+
+## Zero warnings
+
+`TreatWarningsAsErrors=true` means any warning — from the compiler or any Roslyn analyzer — will fail the build. Run `dotnet build` locally before committing to ensure zero warnings.
+
+## XML doc comments
+
+Every public and internal type, method, and property must have a `<summary>` comment. `GenerateDocumentationFile=true` makes `CS1591` a warning:
+
+```csharp
+/// <summary>
+/// Handles the ping command, responding with the current gateway latency.
+/// </summary>
+internal sealed class PingCommand : ICommand
+{
+    /// <summary>
+    /// The command name used for dispatch.
+    /// </summary>
+    public string Name => "ping";
+}
+```
+
+## Locking
+
+Use `System.Threading.Lock` (C# 13 / .NET 9+) for thread synchronization:
+
+```csharp
+private readonly Lock _lock = new();
+
+public void DoSomething()
+{
+    lock (_lock)
+    {
+        // Thread-safe operation
+    }
+}
+```
+
+Prefer `Lock` over `lock(obj)` on a plain object. `System.Threading.Lock` provides better diagnostics and performance.
+
+## ConfigureAwait
+
+In library code (non-UI contexts), use `ConfigureAwait(false)` on all `await` calls:
+
+```csharp
+await _connection.OpenAsync().ConfigureAwait(false);
+```
+
+This avoids capturing the synchronization context, which is unnecessary in a console application.
+
+## ValueTask
+
+For hot-path handlers that may complete synchronously, return `ValueTask` instead of `Task`:
+
+```csharp
+public ValueTask HandleAsync()
+{
+    if (_cached)
+        return ValueTask.CompletedTask;
+
+    return DoAsync();
+}
+
+private async Task DoAsync() { ... }
+```
+
+## No DI
+
+Do not use dependency injection. Construct dependencies manually:
+
+```csharp
+// ✅ Correct
+var db = new DatabaseService();
+var feature = new MyFeature(db);
+
+// ❌ Wrong
+services.AddSingleton<MyFeature>();
+```
+
+## File organization
+
+| Type | Directory |
+|------|-----------|
+| Command classes | `Commands/<Category>/` |
+| Feature classes | `Features/` |
+| Discord-related | `Discord/` |
+| Builders / models | `Components/V1/` or `Components/V2/` |
+| Services | `Services/` |
+| Utilities | `Utils/` |
+
+## Naming conventions
+
+- Files: `PascalCase.cs` matching the type name
+- Classes: `PascalCase`
+- Methods: `PascalCase`
+- Local variables: `camelCase`
+- Private fields: `_camelCase`
+- Constants: `PascalCase` (no special prefix)
+- Interfaces: `I` prefix (`ICommand`)
+
+## Command naming
+
+Commands are matched case-insensitively. The `Name` property should be lower-case:
+
+```csharp
+public string Name => "mycommand"; // matches SMycommand, smycommand, SMYCOMMAND
+```
+
+The display name in help uses `Name` as-is.

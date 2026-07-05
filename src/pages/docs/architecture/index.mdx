@@ -1,0 +1,16 @@
+# Architecture
+
+ShiggyBot uses a flat, manually-wired architecture with no dependency injection container and no generic host. Every object is explicitly constructed in `Program.cs` and `DiscordClientService`.
+
+## Pages
+
+- [Entrypoint](/architecture/entrypoint) — `Program.cs`, global handlers, service wiring
+- [Discord Client Service](/architecture/discord-client-service) — the orchestrator, gateway config, startup sequence
+- [Command System](/architecture/command-system) — prefix dispatch, command interface, registration
+- [Component Systems](/architecture/component-systems) — V1 vs V2 message builders
+- [Features](/architecture/features) — autorole, code previews, GitHub monitoring, and more
+- [Services](/architecture/services) — BotConfig, DatabaseService, auxiliary services
+- [Database](/architecture/database) — SQLite schema, conventions, single-connection model
+- [Utilities](/architecture/utilities) — helper classes used across the codebase
+- [Config System](/architecture/config-system) — how `BotConfig` loads and merges configuration
+- [Key Patterns](/architecture/patterns) — ban check timer, caches, presence rotation, HttpClient usage, button dispatch

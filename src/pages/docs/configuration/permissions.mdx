@@ -1,0 +1,56 @@
+# Discord Permissions
+
+The bot requires specific Discord permissions and gateway intents to function. This page documents every permission, what uses it, and what happens if it is missing.
+
+## Bot permissions (server-level)
+
+These are granted when the bot is invited to a server (via the OAuth2 URL) and can be modified later in Server Settings > Roles.
+
+| Permission | Used by | Behavior if missing |
+|------------|---------|-------------------|
+| Read Messages / View Channels | All commands | Bot cannot see any messages or channels |
+| Send Messages | All commands | Bot cannot respond to commands |
+| Manage Messages | `Spurge` | Purge command fails silently |
+| Embed Links | Help, code previews, commit previews | Embeds render as plain links |
+| Attach Files | `Smpreg`, commit previews | File attachments fail |
+| Read Message History | Command context, `Spurge` | Purge cannot fetch message history |
+| Kick Members | `Skick` | Kick command fails |
+| Ban Members | `Sban` | Ban/unban commands fail |
+| Moderate Members | `Stimeout` | Timeout command fails |
+| Manage Roles | `Saddrole`, `Sremoverole`, autorole | Role modification commands fail |
+| Manage Channels | `Snuke` | Nuke command fails |
+
+## Gateway intents
+
+Gateway intents are configured in code (`DiscordSocketConfig`) and must also be enabled in the Discord Developer Portal.
+
+| Intent | Code constant | Purpose |
+|--------|--------------|---------|
+| Guilds | `GatewayIntents.Guilds` | Guild metadata, channel list, member list enumeration |
+| Guild Members | `GatewayIntents.GuildMembers` | `GuildMemberUpdated` event for autorole |
+| Guild Messages | `GatewayIntents.GuildMessages` | `MessageReceived` event for command dispatch |
+| Message Content | `GatewayIntents.MessageContent` | Reading the text content of messages |
+
+### Message Content Intent
+
+This is the most commonly missed intent. Without it:
+
+- The bot connects successfully and appears online.
+- The `MessageReceived` event fires.
+- `message.Content` is always an empty string.
+- No prefix-based command will ever match.
+- The bot appears completely unresponsive.
+
+The intent must be enabled in **two places**:
+1. Discord Developer Portal > Bot > Privileged Gateway Intents > toggle **Message Content Intent**.
+2. `DiscordSocketConfig.GatewayIntents` must include `GatewayIntents.MessageContent`.
+
+### Adding new intents
+
+If you develop a feature that needs a new intent:
+
+1. Add the intent to the `GatewayIntents` bitmask in `DiscordClientService`.
+2. Enable it in the Discord Developer Portal.
+3. Restart the bot.
+
+Available intents are documented in the [Discord.NET API docs](https://docs.discordnet.dev/guides/concepts/intents.html).

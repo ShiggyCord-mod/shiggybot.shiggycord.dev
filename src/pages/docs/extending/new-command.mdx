@@ -1,0 +1,155 @@
+# New Command
+
+This page walks through creating a new command from scratch.
+
+## 1. Choose your component system
+
+| | V1 | V2 |
+|--|----|----|
+| Format | Traditional embeds + components | Colored containers, sections, galleries |
+| Builder | `V1MessageBuilder` | `V2MessageBuilder` |
+| Client | `ComponentsV1Client` | `ComponentsV2Client` |
+| Flag | Standard | `1 << 15` in message flags |
+| Good for | Simple responses, buttons, embeds | Rich formatted messages |
+
+V1 is simpler and more widely supported. V2 provides richer layouts. See [Component Systems](/architecture/component-systems) for details.
+
+## 2. Create the command class
+
+Implement `ICommand` in `Commands/<Category>/`:
+
+```csharp
+using Discord.WebSocket;
+using ShiggyBot.Commands;
+
+namespace ShiggyBot.Commands.Utility;
+
+internal sealed class FooCommand : ICommand
+{
+    public string Name => "foo";
+    public string Description => "Does something useful";
+    public string Category => "Utility";
+    public IReadOnlyList<string> Aliases => Array.Empty<string>();
+
+    public async Task ExecuteAsync(SocketUserMessage message, string[] args, DiscordSocketClient client)
+    {
+        await message.Channel.SendMessageAsync("Hello from foo!");
+    }
+}
+```
+
+### ICommand interface reference
+
+```csharp
+public interface ICommand
+{
+    string Name { get; }
+    string Description { get; }
+    string Category { get; }
+    IReadOnlyList<string> Aliases { get; }
+    GuildPermission? RequiredPermission { get; }
+
+    Task ExecuteAsync(SocketUserMessage message, string[] args, DiscordSocketClient client);
+}
+```
+
+| Member | Purpose |
+|--------|---------|
+| `Name` | Primary dispatch name (case-insensitive) |
+| `Description` | Shown in `Shelp` output |
+| `Category` | Groups commands in help menu |
+| `Aliases` | Alternative names (e.g., `["g", "search"]` for google) |
+| `RequiredPermission` | If set, the user must have this guild permission |
+| `ExecuteAsync` | The command body. `args` is the message split by spaces after the command name. |
+
+## 3. Register the command
+
+In `CommandHandler.RegisterCommands()`, add your command to the appropriate client block:
+
+```csharp
+// V1 command
+if (_v1Client is not null)
+{
+    Register(new FooCommand());
+}
+
+// V2 command
+if (_v2Client is not null)
+{
+    Register(new BarCommand());
+}
+```
+
+The `Register()` method adds the command's name and aliases to the dispatch dictionary:
+
+```csharp
+private void Register(ICommand command)
+{
+    _commands[command.Name.ToUpperInvariant()] = command;
+    foreach (var alias in command.Aliases)
+    {
+        _commands[alias.ToUpperInvariant()] = command;
+    }
+}
+```
+
+## 4. Build the response
+
+### V1 response
+
+```csharp
+V1MessageBuilder builder = new V1MessageBuilder()
+    .AddEmbed(new V1EmbedBuilder()
+        .WithTitle("Result")
+        .WithDescription("Operation completed successfully.")
+        .WithColor(V1EmbedBuilder.ColorSuccess))
+    .AddButton(new V1ButtonBuilder()
+        .WithCustomId("confirm")
+        .WithLabel("Confirm")
+        .WithStyle(V1ButtonStyle.Primary));
+
+await _v1Client.SendMessageAsync(message.Channel.Id, builder);
+```
+
+### V2 response
+
+```csharp
+V2MessageBuilder builder = new V2MessageBuilder()
+    .AddContainer(new ContainerBuilder()
+        .WithAccentColor(V2ContainerColor.Primary)
+        .AddSection(new SectionBuilder()
+            .AddTextDisplay(new TextDisplayBuilder()
+                .WithContent("Hello from V2!"))));
+
+await _v2Client.SendMessageAsync(message.Channel.Id, builder);
+```
+
+## 5. Add reply-to support
+
+Many moderation commands support replying to a message to target its author. Pattern:
+
+```csharp
+SocketUser? target = message.ReferencedMessage?.Author;
+
+if (target is null && args.Length > 0)
+{
+    // Try parsing from args: mention (<@123>), raw ID (123), or name
+    target = ParseUserFromArgs(args[0], message, client);
+}
+
+if (target is null)
+{
+    await message.Channel.SendMessageAsync("Please reply to a user or specify one.");
+    return;
+}
+
+// Use target
+```
+
+## 6. Add permission requirements
+
+```csharp
+public GuildPermission? RequiredPermission => GuildPermission.Administrator;
+```
+
+The permission is checked in `CommandHandler`. If the user lacks it, execution is silently skipped.

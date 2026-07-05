@@ -1,0 +1,123 @@
+# Gotchas
+
+Pitfalls and common mistakes to avoid when working with ShiggyBot.
+
+## V2 namespace ambiguity
+
+Discord.Net 3.20.1 ships its own `ContainerBuilder`, `SectionBuilder`, and `TextDisplayBuilder` under the `Discord` namespace. Files importing both `using Discord;` and `using ShiggyBot.Components.V2;` will get ambiguous reference errors:
+
+```csharp
+using Discord;
+using ShiggyBot.Components.V2;
+
+// Error: ContainerBuilder is ambiguous between
+//   Discord.ContainerBuilder and
+//   ShiggyBot.Components.V2.ContainerBuilder
+```
+
+**Fix:** Use `global::` qualification:
+
+```csharp
+using global::Discord.ContainerBuilder;
+using global::Discord.SectionBuilder;
+using global::Discord.TextDisplayBuilder;
+```
+
+Or rename with using aliases:
+
+```csharp
+using DiscordContainerBuilder = global::Discord.ContainerBuilder;
+```
+
+## config.txt parser
+
+The `config.txt` parser uses `Split('=', 2)`. Contrary to what AGENTS.md states, this actually **preserves** everything after the first `=`:
+
+```
+TOKEN=abc=def
+// Split('=', 2) → ["TOKEN", "abc=def"]
+// Value: "abc=def"
+```
+
+The confusion stems from early documentation. Values containing `=` are NOT truncated. However, for complex values (JSON, long strings), prefer `appsettings.json` or environment variables.
+
+## Never commit a real DISCORD_TOKEN
+
+The config files are gitignored, but mistakes happen. Before committing:
+
+```bash
+git diff --cached
+```
+
+Check for any file containing a real-looking token. Use placeholders in examples:
+
+```
+DISCORD_TOKEN=your_token_here
+```
+
+## Gateway intents
+
+If your feature needs a new gateway intent, remember to update it in **three places**:
+
+1. **Code** — `DiscordSocketConfig.GatewayIntents` in `DiscordClientService`
+2. **Developer Portal** — Bot > Privileged Gateway Intents
+3. **Restart** — The bot must be restarted to pick up the new intents
+
+Missing any of these will cause the feature to fail silently.
+
+## HTTP client boilerplate
+
+Six or more classes each create their own `static readonly HttpClient`. When creating a new one, always set an explicit timeout:
+
+```csharp
+private static readonly HttpClient _http = new()
+{
+    Timeout = TimeSpan.FromSeconds(15)  // ⚠ Never skip this
+};
+```
+
+Without an explicit `Timeout`, the default is 100 seconds, which can cause long hangs.
+
+## async void event handlers
+
+Discord.NET's events use `async void` delegates. Wrap the body in try/catch:
+
+```csharp
+_client.MessageReceived += async (msg) =>
+{
+    try
+    {
+        await HandleMessage(msg);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error: {ex.Message}");
+    }
+};
+```
+
+Exceptions in `async void` methods crash the process — they are not captured by `TaskScheduler.UnobservedTaskException`.
+
+## Static HttpClient DNS behavior
+
+`HttpClient` uses the underlying `SocketsHttpHandler` which caches DNS resolutions indefinitely by default. On .NET Core / .NET 5+, the default handler respects DNS changes, but on long-running processes, use `SocketsHttpHandler` with `PooledConnectionLifetime` for production reliability:
+
+```csharp
+private static readonly HttpClient _http = new(new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+})
+{
+    Timeout = TimeSpan.FromSeconds(15)
+};
+```
+
+## MDX template braces
+
+When documenting presence templates (or any text containing `{braces}`) in MDX, wrap them in backticks:
+
+```mdx
+Watching \`{stars}\` stars on \`{repo}\`
+```
+
+Without backticks, MDX interprets `{stars}` as a JavaScript expression and fails to compile.

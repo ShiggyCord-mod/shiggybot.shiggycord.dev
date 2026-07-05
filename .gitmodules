@@ -1,0 +1,4 @@
+[submodule "ShiggyBot"]
+	path = ShiggyBot
+	url = https://github.com/kmmiio99o/ShiggyBot
+	branch = dev

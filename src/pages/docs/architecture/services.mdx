@@ -1,0 +1,52 @@
+# Services
+
+Services are shared infrastructure classes that support commands and features.
+
+## DatabaseService
+
+The SQLite data access layer. See [Database](/architecture/database) for full documentation.
+
+| Property | Value |
+|----------|-------|
+| File | `Services/DatabaseService.cs` |
+| Connection | Single `SqliteConnection`, open for lifetime |
+| Thread safety | Not thread-safe — single-threaded usage by design |
+
+### Key methods
+
+| Method | Purpose |
+|--------|---------|
+| `InitializeAsync()` | Creates tables via `CREATE TABLE IF NOT EXISTS` |
+| `IsCommandDisabledAsync(guildId, name)` | Checks per-guild disable list |
+| `GetTimedBansAsync()` | Returns all active timed bans |
+| `RemoveTimedBanAsync(guildId, userId)` | Removes a ban record after unban |
+| `GetGuildConfigAsync(guildId)` | Gets guild config (e.g., welcome role) |
+| `SetGuildConfigAsync(guildId, config)` | Updates guild config |
+
+## BotConfig
+
+Configuration loading and storage. See [Config System](/architecture/config-system) for full documentation.
+
+| Property | Value |
+|----------|-------|
+| File | `Services/BotConfig.cs` |
+| Method | `LoadFromConfiguration()` (static) |
+| Sources | `appsettings.json`, env vars, `config.txt` |
+
+## ComponentsV1Client
+
+HTTP client for sending V1 format messages via the Discord REST API.
+
+| Property | Value |
+|----------|-------|
+| File | `Commands/V1Service.cs` (or similar) |
+| Transport | Direct HTTP to `discord.com/api/v10` |
+
+## ComponentsV2Client
+
+HTTP client for sending V2 format messages.
+
+| Property | Value |
+|----------|-------|
+| Transport | Direct HTTP to `discord.com/api/v10` |
+| Flag | Sets `1 << 15` in message flags |
