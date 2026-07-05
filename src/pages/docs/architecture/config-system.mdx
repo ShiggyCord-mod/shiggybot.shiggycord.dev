@@ -13,7 +13,6 @@ internal sealed class BotConfig
     public string PresenceStatus { get; init; } = "online";
     public int PresenceInterval { get; init; } = 300;
     public string? LogWebhookUrl { get; init; }
-    public string? HfToken { get; init; }
     public string? GitHubToken { get; init; }
     public string GitHubRepo { get; init; } = "kmmiio99o/ShiggyCord";
     public string? GitHubWebhookChannelId { get; init; }
@@ -62,7 +61,6 @@ But AGENTS.md says: "Loading order (later overrides earlier): 1. appsettings.jso
 | `PRESENCE_STATUS` | `"online"` | No |
 | `PRESENCE_INTERVAL` | `300` | No |
 | `LOG_WEBHOOK_URL` | `null` | Yes |
-| `HF_TOKEN` | `null` | Yes |
 | `GITHUB_TOKEN` | `null` | Yes |
 | `GITHUB_REPO` | `"kmmiio99o/ShiggyCord"` | No |
 | `GITHUB_WEBHOOK_CHANNEL_ID` | `null` | Yes |
